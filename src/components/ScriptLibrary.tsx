@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, memo } from 'react'
 import type { Script } from '../lib/types'
 import './ScriptLibrary.css'
 
@@ -36,7 +36,7 @@ function relDate(ts: number): string {
   return dt.toLocaleDateString('en', { month: 'short', day: 'numeric' })
 }
 
-export function ScriptLibrary({
+export const ScriptLibrary = memo(function ScriptLibrary({
   scripts, activeId, searchQuery, onSearchChange,
   onSelect, onCreate, onRename, onDelete, onDuplicate,
 }: Props) {
@@ -157,4 +157,4 @@ export function ScriptLibrary({
       </ul>
     </aside>
   )
-}
+})

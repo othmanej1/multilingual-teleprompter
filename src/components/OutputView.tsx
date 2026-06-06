@@ -1,0 +1,75 @@
+import { useEffect, useRef, useState, useCallback } from 'react'
+import { useSyncChannel } from '../hooks/useSyncChannel'
+import { useSettings } from '../contexts/SettingsContext'
+import { fontFamilyCss } from '../lib/settings'
+import type { SyncMessage } from '../lib/types'
+import './OutputView.css'
+
+export function OutputView() {
+  const { settings } = useSettings()
+  const [script, setScript] = useState('')
+  const [connected, setConnected] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const rafRef = useRef<number>(0)
+
+  function applyRatio(ratio: number) {
+    cancelAnimationFrame(rafRef.current)
+    rafRef.current = requestAnimationFrame(() => {
+      const el = scrollRef.current
+      if (!el) return
+      const maxScroll = el.scrollHeight - el.clientHeight
+      if (maxScroll > 0) el.scrollTop = ratio * maxScroll
+    })
+  }
+
+  const send = useSyncChannel(useCallback((msg: SyncMessage) => {
+    if (msg.type === 'script') {
+      setScript(msg.content)
+      setConnected(true)
+    } else if (msg.type === 'frame' || msg.type === 'seek') {
+      applyRatio(msg.ratio)
+    } else if (msg.type === 'ping') {
+      send({ type: 'pong' })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []))
+
+  // Announce presence and request fullscreen on mount
+  useEffect(() => {
+    send({ type: 'pong' })
+    document.documentElement.requestFullscreen?.().catch(() => {})
+    return () => cancelAnimationFrame(rafRef.current)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  return (
+    <div className="output-root" style={{ backgroundColor: settings.bgColor }}>
+      {!connected && (
+        <div className="output-waiting">
+          <div className="output-waiting-dot" />
+          <span>Waiting for operator…</span>
+        </div>
+      )}
+      <div
+        ref={scrollRef}
+        className="output-scroll"
+        style={{ transform: settings.mirror ? 'scaleX(-1)' : undefined }}
+      >
+        <div
+          className="output-text"
+          dir={settings.direction}
+          style={{
+            color: settings.textColor,
+            fontSize: settings.fontSize,
+            fontFamily: fontFamilyCss(settings.fontFamily),
+            lineHeight: settings.lineHeight,
+            letterSpacing: `${settings.letterSpacing}px`,
+            textAlign: settings.textAlign,
+          }}
+        >
+          {script}
+        </div>
+      </div>
+    </div>
+  )
+}

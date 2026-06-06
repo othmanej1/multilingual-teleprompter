@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import './App.css'
 import { ScriptLibrary } from './components/ScriptLibrary'
+import { OperatorDashboard } from './components/OperatorDashboard'
+import { useSyncChannel } from './hooks/useSyncChannel'
+import { useSettings } from './contexts/SettingsContext'
+import { FONT_FAMILY_OPTIONS, fontFamilyCss } from './lib/settings'
 import {
   loadScripts, persistScripts, loadActiveId, persistActiveId, makeScript,
 } from './lib/storage'
-import type { Script, SaveStatus } from './lib/types'
-
-type Direction = 'auto' | 'ltr' | 'rtl'
+import type { Script, SaveStatus, SyncMessage } from './lib/types'
 
 const SAMPLE = `Welcome to your professional teleprompter.
 
@@ -46,6 +48,9 @@ function fmtDate(ts: number): string {
 }
 
 export default function App() {
+  // ── Shared typography settings (single source of truth) ──
+  const { settings, update } = useSettings()
+
   // ── Phase 2B: script management ────────────────────────
   const [scripts, setScripts] = useState<Script[]>(bootstrapScripts)
   const [activeId, setActiveId] = useState<string>(bootstrapActiveId)
@@ -63,11 +68,6 @@ export default function App() {
   // ── Phase 1: playback controls ─────────────────────────
   const [isPlaying, setIsPlaying] = useState(false)
   const [speed, setSpeed] = useState(60)
-  const [fontSize, setFontSize] = useState(32)
-  const [textColor, setTextColor] = useState('#ffffff')
-  const [bgColor, setBgColor] = useState('#0a0a0f')
-  const [mirror, setMirror] = useState(false)
-  const [direction, setDirection] = useState<Direction>('auto')
 
   // ── Phase 2A: fullscreen + guide + countdown ───────────
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -78,6 +78,17 @@ export default function App() {
   const [countdownActive, setCountdownActive] = useState(false)
   const [countdownValue, setCountdownValue] = useState(0)
 
+  // ── Phase 3: dual-screen + dashboard ──────────────────
+  const [dashboardOpen, setDashboardOpen] = useState(false)
+  const [outputConnected, setOutputConnected] = useState(false)
+  const [scrollRatio, setScrollRatio] = useState(0)
+
+  const outputWindowRef = useRef<Window | null>(null)
+  const scrollRatioRef = useRef(0)
+  const dashboardTickRef = useRef(0)
+  const sendSyncRef = useRef<(msg: SyncMessage) => void>(() => {})
+  const scriptRef = useRef('')  // always-current script for pong handler
+
   const appRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
   const rafRef = useRef<number>(0)
@@ -86,6 +97,7 @@ export default function App() {
   // ── Derived: active script ─────────────────────────────
   const activeScript = scripts.find(s => s.id === activeId) ?? scripts[0]
   const script = activeScript?.content ?? ''
+  scriptRef.current = script  // keep ref in sync every render
 
   const filteredScripts = useMemo(
     () => searchQuery
@@ -105,6 +117,56 @@ export default function App() {
     const secs = totalSecs % 60
     return { words, chars, duration: mins > 0 ? `${mins}m ${secs}s` : `${secs}s` }
   }, [script])
+
+  // ── BroadcastChannel: script content only ─────────────
+  // SettingsContext handles all typography settings sync on the same channel.
+  // App only syncs script content + scroll position.
+  const sendSync = useSyncChannel(useCallback((msg: SyncMessage) => {
+    if (msg.type === 'pong') {
+      setOutputConnected(true)
+      // Use scriptRef so this is never stale regardless of when pong arrives
+      sendSyncRef.current({ type: 'script', content: scriptRef.current })
+    }
+  }, [])) // no deps needed — scriptRef is always current
+
+  useEffect(() => { sendSyncRef.current = sendSync }, [sendSync])
+
+  // Broadcast script content when it changes or when output window connects
+  useEffect(() => {
+    if (!outputConnected) return
+    sendSyncRef.current({ type: 'script', content: script })
+  }, [script, outputConnected])
+
+  // Ping output window periodically to detect disconnection
+  useEffect(() => {
+    if (!outputConnected) return
+    const id = setInterval(() => sendSyncRef.current({ type: 'ping' }), 3000)
+    return () => clearInterval(id)
+  }, [outputConnected])
+
+  // ── Open output window ─────────────────────────────────
+  const openOutputWindow = useCallback(() => {
+    if (outputWindowRef.current && !outputWindowRef.current.closed) {
+      outputWindowRef.current.focus()
+      return
+    }
+    const win = window.open(
+      `${window.location.origin}${window.location.pathname}?output=1`,
+      'tp_output',
+      'popup,width=1280,height=720',
+    )
+    if (win) {
+      outputWindowRef.current = win
+      setOutputConnected(false)
+      const poll = setInterval(() => {
+        if (win.closed) {
+          clearInterval(poll)
+          setOutputConnected(false)
+          outputWindowRef.current = null
+        }
+      }, 1000)
+    }
+  }, [])
 
   // ── Auto-save to localStorage ──────────────────────────
   useEffect(() => {
@@ -130,6 +192,8 @@ export default function App() {
     setIsPlaying(false)
     setCountdownActive(false)
     setCountdownValue(0)
+    setScrollRatio(0)
+    scrollRatioRef.current = 0
   }, [activeId])
 
   // ── Script CRUD ────────────────────────────────────────
@@ -248,7 +312,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [handlePlayPress])
 
-  // ── Scroll animation ───────────────────────────────────
+  // ── Scroll animation (RAF) ─────────────────────────────
   useEffect(() => {
     if (!isPlaying) {
       cancelAnimationFrame(rafRef.current)
@@ -262,8 +326,20 @@ export default function App() {
       const el = previewRef.current
       if (el) {
         el.scrollTop += (speed * delta) / 1000
+        const maxScroll = el.scrollHeight - el.clientHeight
+        const ratio = maxScroll > 0 ? el.scrollTop / maxScroll : 0
+
+        if (outputConnected) sendSyncRef.current({ type: 'frame', ratio })
+
+        scrollRatioRef.current = ratio
+        if (ts - dashboardTickRef.current > 100) {
+          setScrollRatio(ratio)
+          dashboardTickRef.current = ts
+        }
+
         if (el.scrollTop + el.clientHeight >= el.scrollHeight - 2) {
           setIsPlaying(false)
+          setScrollRatio(1)
           return
         }
       }
@@ -271,7 +347,7 @@ export default function App() {
     }
     rafRef.current = requestAnimationFrame(animate)
     return () => { cancelAnimationFrame(rafRef.current); lastTimeRef.current = null }
-  }, [isPlaying, speed])
+  }, [isPlaying, speed, outputConnected])
 
   // ── Fullscreen ─────────────────────────────────────────
   const toggleFullscreen = useCallback(() => {
@@ -298,14 +374,22 @@ export default function App() {
     const el = previewRef.current
     if (!el) return
     el.scrollTop = Math.max(0, el.scrollTop + speed * secs)
-  }, [speed])
+    const maxScroll = el.scrollHeight - el.clientHeight
+    const ratio = maxScroll > 0 ? el.scrollTop / maxScroll : 0
+    scrollRatioRef.current = ratio
+    setScrollRatio(ratio)
+    if (outputConnected) sendSyncRef.current({ type: 'seek', ratio })
+  }, [speed, outputConnected])
 
   const handleReset = useCallback(() => {
     setIsPlaying(false)
     setCountdownActive(false)
     setCountdownValue(0)
+    setScrollRatio(0)
+    scrollRatioRef.current = 0
     if (previewRef.current) previewRef.current.scrollTop = 0
-  }, [])
+    if (outputConnected) sendSyncRef.current({ type: 'seek', ratio: 0 })
+  }, [outputConnected])
 
   // ── Title inline editing ───────────────────────────────
   const startTitleEdit = () => {
@@ -371,12 +455,20 @@ export default function App() {
 
           <div className="ctrl">
             <label>Size</label>
-            <input type="range" min={16} max={96} value={fontSize}
-              onChange={e => setFontSize(+e.target.value)} className="slider" />
-            <span className="val">{fontSize}px</span>
+            <input type="range" min={16} max={96} value={settings.fontSize}
+              onChange={e => update({ fontSize: +e.target.value })} className="slider" />
+            <span className="val">{settings.fontSize}px</span>
           </div>
 
           <div className="sep" />
+
+          <button
+            className={`btn-toggle${dashboardOpen ? ' active' : ''}`}
+            onClick={() => setDashboardOpen(o => !o)}
+            title="Operator dashboard"
+          >
+            ⊞ Dashboard
+          </button>
 
           <button
             className={`btn-toggle${isFullscreen ? ' active' : ''}`}
@@ -386,27 +478,67 @@ export default function App() {
           </button>
         </div>
 
-        {/* ── Row 2: appearance / guide / hint ── */}
+        {/* ── Row 2: typography / appearance / guide ── */}
         <div className="header-row">
           <div className="ctrl">
             <label>Text</label>
-            <input type="color" value={textColor}
-              onChange={e => setTextColor(e.target.value)} className="cpicker" />
+            <input type="color" value={settings.textColor}
+              onChange={e => update({ textColor: e.target.value })} className="cpicker" />
           </div>
           <div className="ctrl">
             <label>BG</label>
-            <input type="color" value={bgColor}
-              onChange={e => setBgColor(e.target.value)} className="cpicker" />
+            <input type="color" value={settings.bgColor}
+              onChange={e => update({ bgColor: e.target.value })} className="cpicker" />
           </div>
-          <button className={`btn-toggle${mirror ? ' active' : ''}`}
-            onClick={() => setMirror(m => !m)}>⇔ Mirror</button>
+          <button
+            className={`btn-toggle${settings.mirror ? ' active' : ''}`}
+            onClick={() => update({ mirror: !settings.mirror })}
+          >
+            ⇔ Mirror
+          </button>
           <div className="ctrl">
             <label>Dir</label>
-            <select value={direction}
-              onChange={e => setDirection(e.target.value as Direction)} className="sel">
+            <select value={settings.direction}
+              onChange={e => update({ direction: e.target.value as 'auto' | 'ltr' | 'rtl' })}
+              className="sel">
               <option value="auto">Auto</option>
               <option value="ltr">LTR</option>
               <option value="rtl">RTL</option>
+            </select>
+          </div>
+
+          <div className="ctrl">
+            <label>Font</label>
+            <select value={settings.fontFamily}
+              onChange={e => update({ fontFamily: e.target.value })} className="sel">
+              {FONT_FAMILY_OPTIONS.map(f => (
+                <option key={f.value} value={f.value}>{f.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="ctrl">
+            <label>LH</label>
+            <input type="range" min={1} max={2.5} step={0.05} value={settings.lineHeight}
+              onChange={e => update({ lineHeight: +e.target.value })} className="slider" />
+            <span className="val">{settings.lineHeight.toFixed(2)}</span>
+          </div>
+
+          <div className="ctrl">
+            <label>LS</label>
+            <input type="range" min={0} max={5} step={0.1} value={settings.letterSpacing}
+              onChange={e => update({ letterSpacing: +e.target.value })} className="slider" />
+            <span className="val">{settings.letterSpacing.toFixed(1)}</span>
+          </div>
+
+          <div className="ctrl">
+            <label>Align</label>
+            <select value={settings.textAlign}
+              onChange={e => update({ textAlign: e.target.value as 'left' | 'center' | 'right' })}
+              className="sel">
+              <option value="left">Left</option>
+              <option value="center">Center</option>
+              <option value="right">Right</option>
             </select>
           </div>
 
@@ -479,7 +611,6 @@ export default function App() {
             </div>
 
             <div className="toolbar-right">
-              {/* Import: label wraps hidden file input */}
               <label className="btn-tool" title="Import .txt or .md">
                 ↓ Import
                 <input
@@ -539,14 +670,21 @@ export default function App() {
               ref={previewRef}
               className="teleprompter"
               style={{
-                backgroundColor: bgColor,
-                transform: mirror ? 'scaleX(-1)' : undefined,
+                backgroundColor: settings.bgColor,
+                transform: settings.mirror ? 'scaleX(-1)' : undefined,
               }}
             >
               <div
                 className="tp-text"
-                dir={direction}
-                style={{ color: textColor, fontSize }}
+                dir={settings.direction}
+                style={{
+                  color: settings.textColor,
+                  fontSize: settings.fontSize,
+                  fontFamily: fontFamilyCss(settings.fontFamily),
+                  lineHeight: settings.lineHeight,
+                  letterSpacing: `${settings.letterSpacing}px`,
+                  textAlign: settings.textAlign,
+                }}
               >
                 {script || 'Your script will appear here…'}
               </div>
@@ -568,6 +706,21 @@ export default function App() {
             )}
           </div>
         </section>
+
+        {/* ── Operator Dashboard ── */}
+        {dashboardOpen && (
+          <OperatorDashboard
+            isPlaying={isPlaying}
+            scrollRatio={scrollRatio}
+            totalWords={stats.words}
+            speed={speed}
+            outputConnected={outputConnected}
+            onPlayPause={handlePlayPress}
+            onJump={jumpBy}
+            onSpeedChange={setSpeed}
+            onOpenOutput={openOutputWindow}
+          />
+        )}
       </main>
     </div>
   )

@@ -34,7 +34,11 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-wrap: nowrap;
 }
+.header-row::-webkit-scrollbar { display: none; }
 
 /* ── Brand ─────────────────────────────────────────────── */
 .brand {
@@ -376,10 +380,8 @@
 .tp-text {
   white-space: pre-wrap;
   word-break: break-word;
-  line-height: 1.65;
   font-weight: 500;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans Arabic',
-    'Arabic Typesetting', 'Simplified Arabic', Arial, sans-serif;
+  /* font-family, line-height, letter-spacing, text-align controlled via inline style from settings */
 }
 
 /* ── Reading guide ───────────────────────────────────────── */
@@ -427,6 +429,7 @@
 
 /* ── Fullscreen: hide editor, expand preview ─────────────── */
 .app.fullscreen .editor-panel,
-.app.fullscreen .divider {
+.app.fullscreen .divider,
+.app.fullscreen .op-dashboard {
   display: none;
 }
