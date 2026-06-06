@@ -19,24 +19,30 @@
   overflow: hidden;
 }
 
-/* ── Header ────────────────────────────────────────────── */
+/* ── Header: two-row layout ────────────────────────────── */
 .header {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 0 20px;
-  height: 54px;
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px 20px;
   background: #13151d;
   border-bottom: 1px solid #1e2130;
   flex-shrink: 0;
 }
 
-.brand {
+.header-row {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* ── Brand ─────────────────────────────────────────────── */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 7px;
   flex-shrink: 0;
-  margin-right: 4px;
+  margin-right: 2px;
 }
 
 .brand-dot {
@@ -54,18 +60,17 @@
   letter-spacing: 0.5px;
 }
 
-/* ── Controls bar ──────────────────────────────────────── */
-.controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-  flex-wrap: wrap;
+/* ── Separator ─────────────────────────────────────────── */
+.sep {
+  width: 1px;
+  height: 18px;
+  background: #252839;
+  flex-shrink: 0;
 }
 
-/* Buttons */
+/* ── Buttons ───────────────────────────────────────────── */
 .btn-play {
-  padding: 7px 16px;
+  padding: 6px 15px;
   background: #4f6ef7;
   color: #fff;
   border: none;
@@ -81,12 +86,12 @@
 .btn-play.playing:hover { background: #c94040; }
 
 .btn-secondary {
-  padding: 7px 12px;
+  padding: 5px 10px;
   background: #1c1f2e;
   color: #7c8096;
   border: 1px solid #252839;
   border-radius: 7px;
-  font-size: 13px;
+  font-size: 12px;
   cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;
@@ -94,12 +99,12 @@
 .btn-secondary:hover { background: #252839; color: #e2e4ec; }
 
 .btn-toggle {
-  padding: 7px 12px;
+  padding: 5px 10px;
   background: #1c1f2e;
   color: #7c8096;
   border: 1px solid #252839;
   border-radius: 7px;
-  font-size: 13px;
+  font-size: 12px;
   cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;
@@ -111,11 +116,11 @@
   border-color: rgba(79, 110, 247, 0.4);
 }
 
-/* Control group */
+/* ── Control group ─────────────────────────────────────── */
 .ctrl {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 
 .ctrl label {
@@ -129,14 +134,14 @@
 .val {
   font-size: 11px;
   color: #5c607a;
-  min-width: 30px;
+  min-width: 28px;
 }
 
-/* Slider */
+/* ── Slider ────────────────────────────────────────────── */
 .slider {
   -webkit-appearance: none;
   appearance: none;
-  width: 86px;
+  width: 82px;
   height: 3px;
   background: #252839;
   border-radius: 2px;
@@ -145,8 +150,8 @@
 }
 .slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 13px;
-  height: 13px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: #4f6ef7;
   cursor: pointer;
@@ -154,18 +159,18 @@
 }
 .slider::-webkit-slider-thumb:hover { background: #818cf8; }
 .slider::-moz-range-thumb {
-  width: 13px;
-  height: 13px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: #4f6ef7;
   border: none;
   cursor: pointer;
 }
 
-/* Color picker */
+/* ── Color picker ──────────────────────────────────────── */
 .cpicker {
-  width: 28px;
-  height: 24px;
+  width: 26px;
+  height: 22px;
   border: 1px solid #252839;
   border-radius: 5px;
   background: none;
@@ -173,9 +178,9 @@
   padding: 1px;
 }
 
-/* Select */
+/* ── Select ────────────────────────────────────────────── */
 .sel {
-  padding: 5px 8px;
+  padding: 4px 7px;
   background: #1c1f2e;
   color: #e2e4ec;
   border: 1px solid #252839;
@@ -186,10 +191,10 @@
 }
 .sel:hover { border-color: #3a3d52; }
 
-/* Keyboard hint */
+/* ── Keyboard hint ─────────────────────────────────────── */
 .hint {
   font-size: 10px;
-  color: #2e3148;
+  color: #2a2d40;
   white-space: nowrap;
   margin-left: auto;
 }
@@ -251,7 +256,28 @@
 }
 .script-editor::placeholder { color: #252839; }
 
-/* ── Teleprompter preview ────────────────────────────────── */
+/* ── Stats bar ───────────────────────────────────────────── */
+.stats-bar {
+  display: flex;
+  gap: 20px;
+  padding: 6px 16px;
+  background: #0d0f17;
+  border-top: 1px solid #181b27;
+  font-size: 11px;
+  color: #3e4158;
+  flex-shrink: 0;
+}
+
+/* ── Teleprompter wrapper (enables guide + countdown overlay) */
+.teleprompter-wrap {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Teleprompter scroll area ────────────────────────────── */
 .teleprompter {
   flex: 1;
   overflow-y: auto;
@@ -269,4 +295,53 @@
   font-weight: 500;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans Arabic',
     'Arabic Typesetting', 'Simplified Arabic', Arial, sans-serif;
+}
+
+/* ── Reading guide ───────────────────────────────────────── */
+.reading-guide {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 40%;
+  height: 3px;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* ── Countdown overlay ──────────────────────────────────── */
+.countdown-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 20;
+  pointer-events: none;
+}
+
+.countdown-number {
+  display: block;
+  font-size: 160px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+  text-shadow:
+    0 0 60px rgba(79, 110, 247, 0.9),
+    0 0 20px rgba(79, 110, 247, 0.5);
+  animation: cd-pop 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes cd-pop {
+  0%   { transform: scale(1.6); opacity: 0; }
+  20%  { opacity: 1; }
+  70%  { transform: scale(1);   opacity: 1; }
+  100% { transform: scale(0.8); opacity: 0; }
+}
+
+/* ── Fullscreen: hide editor, expand preview ─────────────── */
+.app.fullscreen .editor-panel,
+.app.fullscreen .divider {
+  display: none;
 }
