@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 
-export type VoiceStatus = 'unsupported' | 'idle' | 'listening' | 'denied' | 'error'
+export type VoiceStatus = 'unsupported' | 'idle' | 'starting' | 'listening' | 'denied' | 'error'
 
 export interface VoiceTrackingResult {
   status: VoiceStatus
@@ -77,9 +77,11 @@ export function useVoiceTracking(script: string): VoiceTrackingResult {
 
   const recRef = useRef<SpeechRecognition | null>(null)
   const activeRef = useRef(false)
+  const isListeningRef = useRef(false)
+  const startTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
   const langRef = useRef(language)
   const scriptWordsRef = useRef<string[]>([])
-  const createAndStartRef = useRef<(() => void) | null>(null)
+  const createAndStartRef = useRef<((isInitial?: boolean) => void) | null>(null)
 
   langRef.current = language
 
@@ -87,8 +89,24 @@ export function useVoiceTracking(script: string): VoiceTrackingResult {
     scriptWordsRef.current = normalizeWords(script)
   }, [script])
 
-  const createAndStart = useCallback(() => {
+  const createAndStart = useCallback((isInitial = false) => {
     if (!SpeechRec || !activeRef.current) return
+
+    // On the user-triggered start: show "Starting…" and arm a 5s timeout.
+    // If onstart never fires (no audio device, network issue, etc.), show an error.
+    if (isInitial) {
+      isListeningRef.current = false
+      clearTimeout(startTimeoutRef.current)
+      startTimeoutRef.current = setTimeout(() => {
+        if (activeRef.current && !isListeningRef.current) {
+          activeRef.current = false
+          setStatus('error')
+          setErrorMessage('Microphone did not respond. Check browser permissions.')
+          try { recRef.current?.abort() } catch { /* ignore */ }
+          recRef.current = null
+        }
+      }, 5000)
+    }
 
     const rec = new SpeechRec()
     rec.continuous = true
@@ -98,6 +116,8 @@ export function useVoiceTracking(script: string): VoiceTrackingResult {
     recRef.current = rec
 
     rec.onstart = () => {
+      clearTimeout(startTimeoutRef.current)
+      isListeningRef.current = true
       setStatus('listening')
       setErrorMessage(null)
     }
@@ -140,7 +160,13 @@ export function useVoiceTracking(script: string): VoiceTrackingResult {
     try {
       rec.start()
     } catch {
-      if (activeRef.current) {
+      if (isInitial) {
+        // Synchronous throw on first attempt → surface the error immediately
+        clearTimeout(startTimeoutRef.current)
+        activeRef.current = false
+        setStatus('error')
+        setErrorMessage('Could not access microphone.')
+      } else if (activeRef.current) {
         setTimeout(() => {
           if (activeRef.current) createAndStartRef.current?.()
         }, 500)
@@ -153,14 +179,17 @@ export function useVoiceTracking(script: string): VoiceTrackingResult {
   const start = useCallback(() => {
     if (!isSupported || activeRef.current) return
     activeRef.current = true
+    setStatus('starting')
     setTranscript('')
     setTargetRatio(null)
     setErrorMessage(null)
-    createAndStart()
+    createAndStart(true)
   }, [isSupported, createAndStart])
 
   const stop = useCallback(() => {
+    clearTimeout(startTimeoutRef.current)
     activeRef.current = false
+    isListeningRef.current = false
     try { recRef.current?.stop() } catch { /* ignore */ }
     recRef.current = null
     setStatus('idle')
@@ -178,6 +207,7 @@ export function useVoiceTracking(script: string): VoiceTrackingResult {
 
   useEffect(() => {
     return () => {
+      clearTimeout(startTimeoutRef.current)
       activeRef.current = false
       try { recRef.current?.abort() } catch { /* ignore */ }
     }

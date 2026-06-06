@@ -18,6 +18,7 @@ interface Props {
 const STATUS_LABEL: Record<VoiceStatus, string> = {
   unsupported: 'Not Supported',
   idle: 'Ready',
+  starting: 'Starting…',
   listening: 'Listening',
   denied: 'Permission Denied',
   error: 'Error',
@@ -26,6 +27,7 @@ const STATUS_LABEL: Record<VoiceStatus, string> = {
 const STATUS_COLOR: Record<VoiceStatus, string> = {
   unsupported: '#3e4158',
   idle: '#4e5168',
+  starting: '#818cf8',
   listening: '#4ade80',
   denied: '#ef4444',
   error: '#f59e0b',
@@ -36,6 +38,7 @@ export const VoiceTracker = memo(function VoiceTracker({
   onStart, onStop, onLanguageChange,
 }: Props) {
   const isListening = status === 'listening'
+  const isStarting = status === 'starting'
   const isUnsupported = status === 'unsupported'
 
   const voicePct = targetRatio !== null ? Math.round(targetRatio * 100) : null
@@ -70,6 +73,8 @@ export const VoiceTracker = memo(function VoiceTracker({
       <div className="vt-row">
         {isListening ? (
           <button className="vt-btn vt-stop" onClick={onStop}>⬛ Stop</button>
+        ) : isStarting ? (
+          <button className="vt-btn vt-start" disabled>Starting…</button>
         ) : (
           <button
             className="vt-btn vt-start"
