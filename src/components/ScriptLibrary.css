@@ -1,0 +1,205 @@
+/* ── Sidebar shell ─────────────────────────────────────── */
+.script-library {
+  width: 256px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: #0b0d14;
+  border-right: 1px solid #1a1d28;
+  overflow: hidden;
+}
+
+/* ── Header ────────────────────────────────────────────── */
+.lib-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 14px;
+  border-bottom: 1px solid #1a1d28;
+  flex-shrink: 0;
+}
+
+.lib-heading {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #4e5168;
+  font-weight: 600;
+}
+
+.lib-new {
+  padding: 4px 10px;
+  background: #4f6ef7;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.lib-new:hover { background: #3d5de8; }
+
+/* ── Search ────────────────────────────────────────────── */
+.lib-search-wrap {
+  padding: 7px 10px;
+  border-bottom: 1px solid #1a1d28;
+  flex-shrink: 0;
+}
+
+.lib-search {
+  width: 100%;
+  padding: 5px 10px;
+  background: #13151d;
+  color: #e2e4ec;
+  border: 1px solid #252839;
+  border-radius: 6px;
+  font-size: 12px;
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.lib-search::placeholder { color: #3a3d52; }
+.lib-search:focus { border-color: #4f6ef7; }
+
+/* ── List ──────────────────────────────────────────────── */
+.lib-list {
+  flex: 1;
+  overflow-y: auto;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  scrollbar-width: thin;
+  scrollbar-color: #252839 transparent;
+}
+.lib-list::-webkit-scrollbar { width: 4px; }
+.lib-list::-webkit-scrollbar-thumb { background: #252839; border-radius: 2px; }
+
+.lib-empty {
+  padding: 24px 14px;
+  font-size: 12px;
+  color: #3a3d52;
+  text-align: center;
+}
+
+/* ── Item ──────────────────────────────────────────────── */
+.lib-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 9px 12px;
+  border-bottom: 1px solid #0e1018;
+  cursor: pointer;
+  transition: background 0.1s;
+  min-height: 58px;
+  border-left: 2px solid transparent;
+}
+.lib-item:hover { background: #10121c; }
+.lib-item.active {
+  background: #111628;
+  border-left-color: #4f6ef7;
+}
+
+.lib-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.lib-title {
+  display: block;
+  font-size: 13px;
+  color: #b0b3c2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+.lib-item.active .lib-title { color: #e2e4ec; }
+
+.lib-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 10px;
+  color: #3e4158;
+  line-height: 1.4;
+}
+
+/* ── Inline rename input ───────────────────────────────── */
+.lib-rename {
+  width: 100%;
+  padding: 2px 6px;
+  background: #1c1f2e;
+  color: #e2e4ec;
+  border: 1px solid #4f6ef7;
+  border-radius: 4px;
+  font-size: 13px;
+  outline: none;
+  margin-bottom: 4px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+/* ── Action buttons (visible on hover / active) ────────── */
+.lib-actions {
+  display: none;
+  gap: 1px;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+.lib-item:hover .lib-actions,
+.lib-item.active .lib-actions {
+  display: flex;
+}
+
+.lib-actions button {
+  padding: 4px 5px;
+  background: none;
+  color: #4a4d62;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  transition: all 0.1s;
+}
+.lib-actions button:hover { background: #252839; color: #e2e4ec; }
+
+/* ── Inline delete confirmation ────────────────────────── */
+.lib-confirm {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  padding-top: 2px;
+  font-size: 11px;
+  color: #7c8096;
+  white-space: nowrap;
+}
+
+.lib-confirm-yes {
+  padding: 3px 7px;
+  background: #e05252;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.lib-confirm-yes:hover { background: #c94040; }
+
+.lib-confirm-no {
+  padding: 3px 7px;
+  background: #252839;
+  color: #9ca3af;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.lib-confirm-no:hover { background: #2e3148; }
