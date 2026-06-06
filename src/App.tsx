@@ -462,149 +462,160 @@ export default function App() {
 
           <div className="sep" />
 
-          <button className={playClass} onClick={handlePlayPress} title="Play / Pause [Space]">
-            {playLabel}
-          </button>
-          <button className="btn-secondary" onClick={() => jumpBy(-5)} title="Jump back 5s">⏪ −5s</button>
-          <button className="btn-secondary" onClick={() => jumpBy(5)} title="Jump forward 5s">⏩ +5s</button>
-          <button className="btn-secondary" onClick={handleReset} title="Reset to top">⏮ Reset</button>
-
-          <div className="ctrl">
-            <label>Countdown</label>
-            <select value={countdownOption}
-              onChange={e => setCountdownOption(+e.target.value)} className="sel">
-              <option value={0}>Off</option>
-              <option value={3}>3s</option>
-              <option value={5}>5s</option>
-              <option value={10}>10s</option>
-            </select>
+          <div className="hg-transport">
+            <button className={playClass} onClick={handlePlayPress} title="Play / Pause [Space]">
+              {playLabel}
+            </button>
+            <button className="btn-secondary" onClick={() => jumpBy(-5)} title="Jump back 5s">⏪ −5s</button>
+            <button className="btn-secondary" onClick={() => jumpBy(5)} title="Jump forward 5s">⏩ +5s</button>
+            <button className="btn-secondary" onClick={handleReset} title="Reset to top">⏮ Reset</button>
+            <div className="sep" />
+            <div className="ctrl">
+              <label>Countdown</label>
+              <select value={countdownOption}
+                onChange={e => setCountdownOption(+e.target.value)} className="sel">
+                <option value={0}>Off</option>
+                <option value={3}>3s</option>
+                <option value={5}>5s</option>
+                <option value={10}>10s</option>
+              </select>
+            </div>
           </div>
 
           <div className="sep" />
 
-          <div className="ctrl">
-            <label>Speed</label>
-            <input type="range" min={10} max={300} value={speed}
-              onChange={e => setSpeed(+e.target.value)} className="slider" />
-            <span className="val">{speed}</span>
+          <div className="hg-readability">
+            <div className="ctrl">
+              <label>Speed</label>
+              <input type="range" min={10} max={300} value={speed}
+                onChange={e => setSpeed(+e.target.value)} className="slider" />
+              <span className="val">{speed}</span>
+            </div>
+            <div className="sep" />
+            <div className="ctrl">
+              <label>Size</label>
+              <input type="range" min={16} max={96} value={settings.fontSize}
+                onChange={e => update({ fontSize: +e.target.value })} className="slider" />
+              <span className="val">{settings.fontSize}px</span>
+            </div>
           </div>
 
-          <div className="ctrl">
-            <label>Size</label>
-            <input type="range" min={16} max={96} value={settings.fontSize}
-              onChange={e => update({ fontSize: +e.target.value })} className="slider" />
-            <span className="val">{settings.fontSize}px</span>
+          <div className="hg-panels">
+            <button
+              className={`btn-toggle${dashboardOpen ? ' active' : ''}`}
+              onClick={() => setDashboardOpen(o => !o)}
+              title="Operator dashboard"
+            >
+              ⊞ Dashboard
+            </button>
+
+            <button
+              className={`btn-toggle${voiceOpen ? ' active' : ''}`}
+              onClick={() => setVoiceOpen(o => !o)}
+              title="Voice tracking"
+            >
+              🎙 Voice
+            </button>
+
+            <button
+              className={`btn-toggle${isFullscreen ? ' active' : ''}`}
+              onClick={toggleFullscreen} title="Fullscreen [F11]"
+            >
+              {isFullscreen ? '⛶ Exit' : '⛶ Full'}
+            </button>
           </div>
-
-          <div className="sep" />
-
-          <button
-            className={`btn-toggle${dashboardOpen ? ' active' : ''}`}
-            onClick={() => setDashboardOpen(o => !o)}
-            title="Operator dashboard"
-          >
-            ⊞ Dashboard
-          </button>
-
-          <button
-            className={`btn-toggle${voiceOpen ? ' active' : ''}`}
-            onClick={() => setVoiceOpen(o => !o)}
-            title="Voice tracking"
-          >
-            🎙 Voice
-          </button>
-
-          <button
-            className={`btn-toggle${isFullscreen ? ' active' : ''}`}
-            onClick={toggleFullscreen} title="Fullscreen [F11]"
-          >
-            {isFullscreen ? '⛶ Exit' : '⛶ Full'}
-          </button>
         </div>
 
         {/* ── Row 2: typography / appearance / guide ── */}
         <div className="header-row">
-          <div className="ctrl">
-            <label>Text</label>
-            <input type="color" value={settings.textColor}
-              onChange={e => update({ textColor: e.target.value })} className="cpicker" />
-          </div>
-          <div className="ctrl">
-            <label>BG</label>
-            <input type="color" value={settings.bgColor}
-              onChange={e => update({ bgColor: e.target.value })} className="cpicker" />
-          </div>
-          <button
-            className={`btn-toggle${settings.mirror ? ' active' : ''}`}
-            onClick={() => update({ mirror: !settings.mirror })}
-          >
-            ⇔ Mirror
-          </button>
-          <div className="ctrl">
-            <label>Dir</label>
-            <select value={settings.direction}
-              onChange={e => update({ direction: e.target.value as 'auto' | 'ltr' | 'rtl' })}
-              className="sel">
-              <option value="auto">Auto</option>
-              <option value="ltr">LTR</option>
-              <option value="rtl">RTL</option>
-            </select>
-          </div>
-
-          <div className="ctrl">
-            <label>Font</label>
-            <select value={settings.fontFamily}
-              onChange={e => update({ fontFamily: e.target.value })} className="sel">
-              {FONT_FAMILY_OPTIONS.map(f => (
-                <option key={f.value} value={f.value}>{f.label}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="ctrl">
-            <label>LH</label>
-            <input type="range" min={1} max={2.5} step={0.05} value={settings.lineHeight}
-              onChange={e => update({ lineHeight: +e.target.value })} className="slider" />
-            <span className="val">{settings.lineHeight.toFixed(2)}</span>
-          </div>
-
-          <div className="ctrl">
-            <label>LS</label>
-            <input type="range" min={0} max={5} step={0.1} value={settings.letterSpacing}
-              onChange={e => update({ letterSpacing: +e.target.value })} className="slider" />
-            <span className="val">{settings.letterSpacing.toFixed(1)}</span>
-          </div>
-
-          <div className="ctrl">
-            <label>Align</label>
-            <select value={settings.textAlign}
-              onChange={e => update({ textAlign: e.target.value as 'left' | 'center' | 'right' })}
-              className="sel">
-              <option value="left">Left</option>
-              <option value="center">Center</option>
-              <option value="right">Right</option>
-            </select>
+          <div className="hg-appearance">
+            <div className="ctrl">
+              <label>Text</label>
+              <input type="color" value={settings.textColor}
+                onChange={e => update({ textColor: e.target.value })} className="cpicker" />
+            </div>
+            <div className="ctrl">
+              <label>BG</label>
+              <input type="color" value={settings.bgColor}
+                onChange={e => update({ bgColor: e.target.value })} className="cpicker" />
+            </div>
+            <div className="sep" />
+            <button
+              className={`btn-toggle${settings.mirror ? ' active' : ''}`}
+              onClick={() => update({ mirror: !settings.mirror })}
+            >
+              ⇔ Mirror
+            </button>
+            <div className="ctrl">
+              <label>Dir</label>
+              <select value={settings.direction}
+                onChange={e => update({ direction: e.target.value as 'auto' | 'ltr' | 'rtl' })}
+                className="sel">
+                <option value="auto">Auto</option>
+                <option value="ltr">LTR</option>
+                <option value="rtl">RTL</option>
+              </select>
+            </div>
           </div>
 
           <div className="sep" />
 
-          <button className={`btn-toggle${guideVisible ? ' active' : ''}`}
-            onClick={() => setGuideVisible(v => !v)}>― Guide</button>
-          {guideVisible && (
-            <>
-              <div className="ctrl">
-                <label>Line</label>
-                <input type="color" value={guideColor}
-                  onChange={e => setGuideColor(e.target.value)} className="cpicker" />
-              </div>
-              <div className="ctrl">
-                <label>Opacity</label>
-                <input type="range" min={0.05} max={1} step={0.05} value={guideOpacity}
-                  onChange={e => setGuideOpacity(+e.target.value)} className="slider" />
-                <span className="val">{Math.round(guideOpacity * 100)}%</span>
-              </div>
-            </>
-          )}
+          <div className="hg-typography">
+            <div className="ctrl">
+              <label>Font</label>
+              <select value={settings.fontFamily}
+                onChange={e => update({ fontFamily: e.target.value })} className="sel">
+                {FONT_FAMILY_OPTIONS.map(f => (
+                  <option key={f.value} value={f.value}>{f.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="ctrl">
+              <label>LH</label>
+              <input type="range" min={1} max={2.5} step={0.05} value={settings.lineHeight}
+                onChange={e => update({ lineHeight: +e.target.value })} className="slider" />
+              <span className="val">{settings.lineHeight.toFixed(2)}</span>
+            </div>
+            <div className="ctrl">
+              <label>LS</label>
+              <input type="range" min={0} max={5} step={0.1} value={settings.letterSpacing}
+                onChange={e => update({ letterSpacing: +e.target.value })} className="slider" />
+              <span className="val">{settings.letterSpacing.toFixed(1)}</span>
+            </div>
+            <div className="ctrl">
+              <label>Align</label>
+              <select value={settings.textAlign}
+                onChange={e => update({ textAlign: e.target.value as 'left' | 'center' | 'right' })}
+                className="sel">
+                <option value="left">Left</option>
+                <option value="center">Center</option>
+                <option value="right">Right</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="sep" />
+
+          <div className="hg-guide">
+            <button className={`btn-toggle${guideVisible ? ' active' : ''}`}
+              onClick={() => setGuideVisible(v => !v)}>― Guide</button>
+            {guideVisible && (
+              <>
+                <div className="sep" />
+                <div className="ctrl">
+                  <label>Line</label>
+                  <input type="color" value={guideColor}
+                    onChange={e => setGuideColor(e.target.value)} className="cpicker" />
+                </div>
+                <div className="ctrl">
+                  <label>Opacity</label>
+                  <input type="range" min={0.05} max={1} step={0.05} value={guideOpacity}
+                    onChange={e => setGuideOpacity(+e.target.value)} className="slider" />
+                  <span className="val">{Math.round(guideOpacity * 100)}%</span>
+                </div>
+              </>
+            )}
+          </div>
 
           <span className="hint">Space = play/pause · F11 = fullscreen</span>
         </div>
