@@ -1,57 +1,77 @@
 /* ══════════════════════════════════════════════════════════
-   Design tokens — inherited by all component CSS files
+   Design tokens
    ══════════════════════════════════════════════════════════ */
 :root {
-  /* Surfaces */
-  --bg-base:      #080a10;
-  --bg-sunken:    #0b0d15;
-  --bg-surface:   #0f1117;
-  --bg-elevated:  #12151f;
-  --bg-control:   #181c2c;
-  --bg-hover:     #1f2436;
-  --bg-active:    #272c42;
+  /* Surfaces — layered from deepest to lightest */
+  --bg-base:      #07090f;
+  --bg-sunken:    #0a0c13;
+  --bg-surface:   #0d1018;
+  --bg-elevated:  #11141e;
+  --bg-control:   #171b29;
+  --bg-hover:     #1d2234;
+  --bg-active:    #242840;
 
   /* Borders */
-  --border-dim:   #181b28;
-  --border-ui:    #21253a;
-  --border-hi:    #2e3450;
+  --border-dim:   #161928;
+  --border-ui:    #1e2338;
+  --border-hi:    #2b3050;
   --border-focus: #4f6ef7;
 
-  /* Text */
-  --t1: #eaecf3;
-  --t2: #9198b4;
-  --t3: #4a5072;
-  --t4: #252840;
+  /* Text — 4 levels */
+  --t1: #eaecf4;
+  --t2: #8b93b0;
+  --t3: #464d6a;
+  --t4: #22253c;
 
   /* Accent */
   --accent:       #4f6ef7;
-  --accent-hover: #3d5de8;
-  --accent-dim:   rgba(79, 110, 247, 0.14);
-  --accent-ring:  rgba(79, 110, 247, 0.40);
-  --accent-glow:  rgba(79, 110, 247, 0.65);
+  --accent-hover: #3a5ae8;
+  --accent-dim:   rgba(79, 110, 247, 0.12);
+  --accent-ring:  rgba(79, 110, 247, 0.38);
+  --accent-glow:  rgba(79, 110, 247, 0.60);
+  --accent-subtle: rgba(79, 110, 247, 0.07);
 
   /* Semantic */
-  --danger:       #e05252;
-  --danger-hover: #c94040;
-  --success:      #4ade80;
+  --danger:         #e05252;
+  --danger-hover:   #c94040;
+  --danger-ring:    rgba(224, 82, 82, 0.40);
+  --success:        #4ade80;
+  --warning:        #f59e0b;
 
   /* Type scale */
-  --text-xs:   11px;
-  --text-sm:   12px;
+  --text-2xs: 10px;
+  --text-xs:  11px;
+  --text-sm:  12px;
   --text-base: 13px;
-  --text-md:   14px;
+  --text-md:  14px;
+  --text-lg:  15px;
 
   /* Radii */
-  --r-sm: 5px;
-  --r-md: 7px;
-  --r-lg: 10px;
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+
+  /* Spacing */
+  --gap-xs: 4px;
+  --gap-sm: 6px;
+  --gap-md: 10px;
+  --gap-lg: 16px;
 
   /* Control heights */
-  --h-btn:    32px;
-  --h-btn-lg: 40px;
+  --h-btn:       32px;
+  --h-btn-sm:    28px;
+  --h-btn-lg:    40px;
+  --h-btn-hero:  48px;
 
   /* Slider */
-  --slider-w: 110px;
+  --slider-w:    110px;
+
+  /* Row heights */
+  --h-appbar:    52px;
+  --h-primary:   60px;
+  --h-settings:  44px;
 }
 
 /* ── Reset ──────────────────────────────────────────────── */
@@ -70,7 +90,7 @@
 }
 
 /* ══════════════════════════════════════════════════════════
-   Header
+   Header shell
    ══════════════════════════════════════════════════════════ */
 .header {
   display: flex;
@@ -78,61 +98,55 @@
   background: var(--bg-elevated);
   border-bottom: 1px solid var(--border-dim);
   flex-shrink: 0;
-  gap: 1px;
 }
 
-/* Both header rows share this base */
 .header-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 0 18px;
-  min-height: 48px;
+  gap: var(--gap-sm);
+  padding: 0 20px;
   overflow-x: auto;
+  overflow-y: hidden;
   scrollbar-width: none;
   flex-wrap: nowrap;
 }
-.header-row:first-child {
-  min-height: 52px;
-}
-.header-row:last-child {
-  min-height: 42px;
-  background: rgba(0, 0, 0, 0.20);
-  border-top: 1px solid var(--border-dim);
-}
 .header-row::-webkit-scrollbar { display: none; }
 
-/* Header control groups — visual pods */
-.hg-transport,
-.hg-readability,
-.hg-panels,
-.hg-appearance,
-.hg-typography,
-.hg-guide {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
+/* ── Row 1: App bar ─────────────────────────────────────── */
+.row-appbar {
+  min-height: var(--h-appbar);
+  border-bottom: 1px solid var(--border-dim);
+  gap: var(--gap-md);
+  background: var(--bg-sunken);
 }
 
-/* Push panel buttons to the right end of row 1 */
-.hg-panels {
-  margin-left: auto;
-  gap: 4px;
+/* ── Row 2: Primary controls ────────────────────────────── */
+.row-primary {
+  min-height: var(--h-primary);
+  gap: var(--gap-sm);
 }
 
-/* ── Brand ──────────────────────────────────────────────── */
+/* ── Row 3: Collapsible settings ────────────────────────── */
+.row-settings {
+  min-height: var(--h-settings);
+  gap: var(--gap-sm);
+  background: var(--bg-sunken);
+  border-top: 1px solid var(--border-dim);
+}
+
+/* ══════════════════════════════════════════════════════════
+   App bar elements (Row 1)
+   ══════════════════════════════════════════════════════════ */
 .brand {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   flex-shrink: 0;
-  margin-right: 4px;
 }
 
 .brand-dot {
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   background: var(--accent);
   box-shadow: 0 0 10px var(--accent-glow);
@@ -140,54 +154,180 @@
 }
 
 .brand-name {
-  font-size: 15px;
+  font-size: var(--text-md);
   font-weight: 700;
   color: var(--t1);
-  letter-spacing: 0.2px;
+  letter-spacing: -0.1px;
+  white-space: nowrap;
 }
 
-/* ── Separator ──────────────────────────────────────────── */
-.sep {
+.appbar-rule {
   width: 1px;
-  height: 22px;
+  height: 20px;
   background: var(--border-ui);
   flex-shrink: 0;
-  margin: 0 2px;
+}
+
+/* Script metadata — title, word count, save status */
+.script-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.meta-title {
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--t1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+  transition: color 0.15s;
+  max-width: 260px;
+  flex-shrink: 1;
+}
+.meta-title:hover { color: var(--accent); }
+
+.meta-title-input {
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--t1);
+  background: var(--bg-control);
+  border: 1px solid var(--border-focus);
+  border-radius: var(--r-sm);
+  padding: 3px 8px;
+  outline: none;
+  font-family: inherit;
+  min-width: 160px;
+  max-width: 260px;
+}
+
+.meta-stats {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--text-xs);
+  color: var(--t3);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.meta-dot { color: var(--border-ui); }
+
+.meta-save {
+  font-size: var(--text-xs);
+  color: transparent;
+  transition: color 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.meta-save.saving { color: var(--t3); }
+.meta-save.saved  { color: var(--success); }
+
+/* Panel toggles — pushed to the right of the app bar */
+.appbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-xs);
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 /* ══════════════════════════════════════════════════════════
    Buttons
    ══════════════════════════════════════════════════════════ */
-.btn-play {
+
+/* Hero Play button — the single dominant action */
+.btn-play-hero {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  height: var(--h-btn-lg);
-  padding: 0 22px;
+  gap: 9px;
+  height: var(--h-btn-hero);
+  min-width: 136px;
+  padding: 0 24px;
   background: var(--accent);
   color: #fff;
   border: none;
   border-radius: var(--r-md);
-  font-size: var(--text-base);
-  font-weight: 600;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  font-family: inherit;
   cursor: pointer;
-  transition: background 0.15s, box-shadow 0.15s;
-  white-space: nowrap;
-  letter-spacing: 0.15px;
+  letter-spacing: 0.1px;
   flex-shrink: 0;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+  box-shadow:
+    0 0 0 1px var(--accent-ring),
+    0 4px 20px var(--accent-ring);
 }
-.btn-play:hover {
+.btn-play-hero:hover {
   background: var(--accent-hover);
-  box-shadow: 0 0 14px var(--accent-ring);
+  box-shadow:
+    0 0 0 1px rgba(79, 110, 247, 0.60),
+    0 6px 28px var(--accent-glow);
+  transform: translateY(-1px);
 }
-.btn-play.playing {
+.btn-play-hero:active { transform: translateY(0); }
+.btn-play-hero.playing {
   background: var(--danger);
+  box-shadow:
+    0 0 0 1px var(--danger-ring),
+    0 4px 20px var(--danger-ring);
 }
-.btn-play.playing:hover {
+.btn-play-hero.playing:hover {
   background: var(--danger-hover);
-  box-shadow: 0 0 14px rgba(224, 82, 82, 0.40);
+  box-shadow:
+    0 0 0 1px rgba(224, 82, 82, 0.55),
+    0 6px 28px rgba(224, 82, 82, 0.50);
 }
 
+.play-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+.play-label {
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+
+/* Transport secondary buttons (Reset, −5s, +5s) */
+.transport-group {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.btn-transport {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--h-btn);
+  padding: 0 10px;
+  background: var(--bg-control);
+  color: var(--t2);
+  border: 1px solid var(--border-ui);
+  border-radius: var(--r-sm);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  font-family: inherit;
+  font-weight: 500;
+}
+.btn-transport:hover {
+  background: var(--bg-hover);
+  color: var(--t1);
+  border-color: var(--border-hi);
+}
+.btn-transport:active {
+  background: var(--bg-active);
+}
+
+/* Standard secondary button */
 .btn-secondary {
   display: inline-flex;
   align-items: center;
@@ -210,6 +350,7 @@
   border-color: var(--border-hi);
 }
 
+/* Toggle button (on/off state) */
 .btn-toggle {
   display: inline-flex;
   align-items: center;
@@ -225,6 +366,7 @@
   transition: all 0.15s;
   white-space: nowrap;
   font-family: inherit;
+  font-weight: 500;
   flex-shrink: 0;
 }
 .btn-toggle:hover {
@@ -236,6 +378,42 @@
   background: var(--accent-dim);
   color: #818cf8;
   border-color: var(--accent-ring);
+}
+
+/* Appearance toggle — subtle pill in the primary row */
+.btn-appearance-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--h-btn-sm);
+  padding: 0 12px;
+  background: transparent;
+  color: var(--t3);
+  border: 1px solid var(--border-dim);
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.btn-appearance-toggle:hover {
+  color: var(--t2);
+  border-color: var(--border-ui);
+  background: var(--bg-hover);
+}
+.btn-appearance-toggle.open {
+  color: var(--t1);
+  background: var(--bg-control);
+  border-color: var(--border-hi);
+}
+
+.appearance-chevron {
+  font-size: 8px;
+  line-height: 1;
+  opacity: 0.6;
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -250,7 +428,7 @@
 .ctrl label {
   font-size: var(--text-xs);
   color: var(--t3);
-  letter-spacing: 0.4px;
+  letter-spacing: 0.3px;
   white-space: nowrap;
   user-select: none;
   font-weight: 500;
@@ -262,6 +440,15 @@
   min-width: 32px;
   font-variant-numeric: tabular-nums;
   font-weight: 500;
+}
+
+/* ── Separator ──────────────────────────────────────────── */
+.sep {
+  width: 1px;
+  height: 20px;
+  background: var(--border-ui);
+  flex-shrink: 0;
+  margin: 0 2px;
 }
 
 /* ── Slider ─────────────────────────────────────────────── */
@@ -288,8 +475,8 @@
   transition: box-shadow 0.15s, transform 0.1s;
 }
 .slider::-webkit-slider-thumb:hover {
-  box-shadow: 0 0 10px var(--accent-glow);
-  transform: scale(1.1);
+  box-shadow: 0 0 12px var(--accent-glow);
+  transform: scale(1.15);
 }
 .slider::-moz-range-thumb {
   width: 14px;
@@ -302,10 +489,10 @@
 
 /* ── Color picker ───────────────────────────────────────── */
 .cpicker {
-  width: 30px;
+  width: 28px;
   height: var(--h-btn);
   border: 1px solid var(--border-hi);
-  border-radius: var(--r-sm);
+  border-radius: var(--r-xs);
   background: none;
   cursor: pointer;
   padding: 2px;
@@ -333,7 +520,35 @@
   color: var(--t4);
   white-space: nowrap;
   margin-left: auto;
-  padding-left: 12px;
+  padding-left: 8px;
+}
+
+/* ══════════════════════════════════════════════════════════
+   Collapsible settings row groups
+   ══════════════════════════════════════════════════════════ */
+.settings-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.settings-group-label {
+  font-size: var(--text-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--t4);
+  font-weight: 600;
+  white-space: nowrap;
+  margin-right: 2px;
+}
+
+.settings-divider {
+  width: 1px;
+  height: 22px;
+  background: var(--border-dim);
+  flex-shrink: 0;
+  margin: 0 4px;
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -360,80 +575,29 @@
 .editor-panel  { width: 36%; flex-shrink: 0; }
 .preview-panel { flex: 1; }
 
-.panel-label {
-  padding: 6px 16px;
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
-  color: var(--t3);
-  background: var(--bg-sunken);
-  border-bottom: 1px solid var(--border-dim);
-  flex-shrink: 0;
-  font-weight: 600;
-}
-
 /* ══════════════════════════════════════════════════════════
    Editor panel
    ══════════════════════════════════════════════════════════ */
 .editor-toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 4px;
   padding: 0 14px;
-  min-height: 42px;
+  min-height: 38px;
   background: var(--bg-sunken);
   border-bottom: 1px solid var(--border-dim);
-  flex-shrink: 0;
-}
-
-.script-title-area {
-  flex: 1;
-  min-width: 0;
-}
-
-.script-title-label {
-  display: block;
-  font-size: var(--text-base);
-  color: var(--t2);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  cursor: default;
-  line-height: 1.4;
-  transition: color 0.15s;
-}
-.script-title-label:hover { color: var(--t1); }
-
-.script-title-input {
-  width: 100%;
-  padding: 4px 8px;
-  background: var(--bg-control);
-  color: var(--t1);
-  border: 1px solid var(--border-focus);
-  border-radius: var(--r-sm);
-  font-size: var(--text-base);
-  outline: none;
-  font-family: inherit;
-  box-sizing: border-box;
-}
-
-.toolbar-right {
-  display: flex;
-  align-items: center;
-  gap: 4px;
   flex-shrink: 0;
 }
 
 .btn-tool {
   display: inline-flex;
   align-items: center;
-  height: 28px;
+  height: var(--h-btn-sm);
   padding: 0 10px;
   background: var(--bg-control);
   color: var(--t3);
   border: 1px solid var(--border-ui);
-  border-radius: var(--r-sm);
+  border-radius: var(--r-xs);
   font-size: var(--text-xs);
   cursor: pointer;
   transition: all 0.15s;
@@ -441,32 +605,26 @@
   font-family: inherit;
   user-select: none;
 }
-.btn-tool:hover { background: var(--bg-hover); color: var(--t1); border-color: var(--border-hi); }
-
-.save-badge {
-  font-size: var(--text-xs);
-  min-width: 52px;
-  text-align: right;
-  color: transparent;
-  transition: color 0.2s;
+.btn-tool:hover {
+  background: var(--bg-hover);
+  color: var(--t2);
+  border-color: var(--border-hi);
 }
-.save-badge.saving { color: var(--t3); }
-.save-badge.saved  { color: var(--success); }
 
 /* ── Script editor textarea ─────────────────────────────── */
 .script-editor {
   flex: 1;
   width: 100%;
-  padding: 20px 22px;
+  padding: 22px 24px;
   background: var(--bg-surface);
-  color: #aaaec4;
+  color: #a3a8c0;
   border: none;
   outline: none;
   resize: none;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans',
     'Noto Sans Arabic', sans-serif;
   font-size: var(--text-md);
-  line-height: 1.75;
+  line-height: 1.80;
   letter-spacing: 0.2px;
 }
 .script-editor::placeholder { color: var(--t3); }
@@ -476,8 +634,8 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 14px;
-  padding: 7px 16px;
+  gap: 12px;
+  padding: 6px 16px;
   background: var(--bg-sunken);
   border-top: 1px solid var(--border-dim);
   font-size: var(--text-xs);
@@ -503,7 +661,7 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 56px 64px 60vh;
+  padding: 64px 72px 60vh;
   scrollbar-width: none;
   transition: transform 0.2s ease;
 }
@@ -559,7 +717,7 @@
 }
 
 /* ══════════════════════════════════════════════════════════
-   Fullscreen — hide editor, sidebars, panels
+   Fullscreen — hide editor, sidebars, side panels
    ══════════════════════════════════════════════════════════ */
 .app.fullscreen .editor-panel,
 .app.fullscreen .divider,
