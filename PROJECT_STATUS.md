@@ -149,6 +149,18 @@ OutputView
 - [x] Ping/pong heartbeat every 3s to detect window disconnection
 - [x] Output window close detection via polling interval
 
+### Phase 4 — Voice Tracking
+- [x] Web Speech API hook (`useVoiceTracking`) — wraps `SpeechRecognition` / `webkitSpeechRecognition`
+- [x] Continuous recognition with automatic restart on browser auto-stop
+- [x] Language selector: en-US, en-GB, fr-FR, ar-MA, ar-SA, ar-EG
+- [x] Status indicator: Ready / Listening (pulsing) / Permission Denied / Error / Not Supported
+- [x] Sliding-window word-match algorithm to estimate speaker position (0–1 ratio)
+- [x] Smooth scroll correction in RAF loop — proportional, capped at 300 px/s, never abrupt
+- [x] 2-second grace period after any manual jump or reset — voice cannot fight the user
+- [x] Voice panel UI: language selector, start/stop button, latest transcript, drift readout
+- [x] Voice panel hidden in fullscreen mode (same as Dashboard)
+- [x] All existing features preserved: mirror, RTL, multi-monitor sync, typography sync
+
 ### Phase 3 — Settings Synchronization (refactor)
 - [x] `SettingsContext` — React Context as single source of truth for all typography
 - [x] Full settings pushed on every new output window connection (no stale values)
@@ -228,7 +240,6 @@ type SyncMessage =
 ## Hard Constraints (do not remove)
 
 - No Electron packaging
-- No voice recognition
 - No AI features
 - Arabic / RTL text must continue to work
 - All existing features must be preserved when adding new ones
@@ -238,7 +249,7 @@ type SyncMessage =
 
 ## Pending Roadmap (not started)
 
-### Phase 4 — Presenter Experience
+### Phase 5A — Presenter Experience
 - Cue markers (insert `[CUE]` tags in script, jump between them)
 - Presenter notes panel (separate from displayed text, visible to operator only)
 - Script position memory (restore scroll position per script between sessions)

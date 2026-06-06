@@ -2,7 +2,9 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import './App.css'
 import { ScriptLibrary } from './components/ScriptLibrary'
 import { OperatorDashboard } from './components/OperatorDashboard'
+import { VoiceTracker } from './components/VoiceTracker'
 import { useSyncChannel } from './hooks/useSyncChannel'
+import { useVoiceTracking } from './hooks/useVoiceTracking'
 import { useSettings } from './contexts/SettingsContext'
 import { FONT_FAMILY_OPTIONS, fontFamilyCss } from './lib/settings'
 import {
@@ -80,6 +82,7 @@ export default function App() {
 
   // ── Phase 3: dual-screen + dashboard ──────────────────
   const [dashboardOpen, setDashboardOpen] = useState(false)
+  const [voiceOpen, setVoiceOpen] = useState(false)
   const [outputConnected, setOutputConnected] = useState(false)
   const [scrollRatio, setScrollRatio] = useState(0)
 
@@ -87,6 +90,11 @@ export default function App() {
   const scrollRatioRef = useRef(0)
   const dashboardTickRef = useRef(0)
   const sendSyncRef = useRef<(msg: SyncMessage) => void>(() => {})
+
+  // ── Phase 4: voice tracking refs (read inside RAF loop) ────
+  const voiceTargetRatioRef = useRef<number | null>(null)
+  const voiceEnabledRef = useRef(false)
+  const voiceGraceUntilRef = useRef(0)
   const scriptRef = useRef('')  // always-current script for pong handler
 
   const appRef = useRef<HTMLDivElement>(null)
@@ -117,6 +125,12 @@ export default function App() {
     const secs = totalSecs % 60
     return { words, chars, duration: mins > 0 ? `${mins}m ${secs}s` : `${secs}s` }
   }, [script])
+
+  // ── Phase 4: voice tracking ────────────────────────────
+  const voice = useVoiceTracking(script)
+  const voiceActive = voice.status === 'listening'
+  voiceTargetRatioRef.current = voice.targetRatio
+  voiceEnabledRef.current = voiceActive
 
   // ── BroadcastChannel: script content only ─────────────
   // SettingsContext handles all typography settings sync on the same channel.
@@ -313,8 +327,9 @@ export default function App() {
   }, [handlePlayPress])
 
   // ── Scroll animation (RAF) ─────────────────────────────
+  // Runs when playing OR when voice tracking is active.
   useEffect(() => {
-    if (!isPlaying) {
+    if (!isPlaying && !voiceActive) {
       cancelAnimationFrame(rafRef.current)
       lastTimeRef.current = null
       return
@@ -325,8 +340,27 @@ export default function App() {
       lastTimeRef.current = ts
       const el = previewRef.current
       if (el) {
-        el.scrollTop += (speed * delta) / 1000
+        // Speed-based scroll (only when playing)
+        if (isPlaying) {
+          el.scrollTop += (speed * delta) / 1000
+        }
+
         const maxScroll = el.scrollHeight - el.clientHeight
+
+        // Voice correction: smoothly nudge toward the speaker's estimated position.
+        // Skipped during the 2s grace period after a manual jump/reset.
+        const vtRatio = voiceTargetRatioRef.current
+        if (voiceEnabledRef.current && vtRatio !== null && maxScroll > 0 && ts > voiceGraceUntilRef.current) {
+          const targetScrollTop = vtRatio * maxScroll
+          const diff = targetScrollTop - el.scrollTop
+          const absDiff = Math.abs(diff)
+          if (absDiff > 80) {
+            // Proportional correction capped at 300px/s to avoid abrupt jumps
+            const maxStep = Math.min(absDiff * 0.5, 300) * delta / 1000
+            el.scrollTop += Math.sign(diff) * maxStep
+          }
+        }
+
         const ratio = maxScroll > 0 ? el.scrollTop / maxScroll : 0
 
         if (outputConnected) sendSyncRef.current({ type: 'frame', ratio })
@@ -347,7 +381,7 @@ export default function App() {
     }
     rafRef.current = requestAnimationFrame(animate)
     return () => { cancelAnimationFrame(rafRef.current); lastTimeRef.current = null }
-  }, [isPlaying, speed, outputConnected])
+  }, [isPlaying, speed, outputConnected, voiceActive])
 
   // ── Fullscreen ─────────────────────────────────────────
   const toggleFullscreen = useCallback(() => {
@@ -371,6 +405,7 @@ export default function App() {
 
   // ── Jump / Reset ───────────────────────────────────────
   const jumpBy = useCallback((secs: number) => {
+    voiceGraceUntilRef.current = performance.now() + 2000
     const el = previewRef.current
     if (!el) return
     el.scrollTop = Math.max(0, el.scrollTop + speed * secs)
@@ -382,6 +417,7 @@ export default function App() {
   }, [speed, outputConnected])
 
   const handleReset = useCallback(() => {
+    voiceGraceUntilRef.current = performance.now() + 2000
     setIsPlaying(false)
     setCountdownActive(false)
     setCountdownValue(0)
@@ -468,6 +504,14 @@ export default function App() {
             title="Operator dashboard"
           >
             ⊞ Dashboard
+          </button>
+
+          <button
+            className={`btn-toggle${voiceOpen ? ' active' : ''}`}
+            onClick={() => setVoiceOpen(o => !o)}
+            title="Voice tracking"
+          >
+            🎙 Voice
           </button>
 
           <button
@@ -719,6 +763,21 @@ export default function App() {
             onJump={jumpBy}
             onSpeedChange={setSpeed}
             onOpenOutput={openOutputWindow}
+          />
+        )}
+
+        {/* ── Voice Tracker ── */}
+        {voiceOpen && (
+          <VoiceTracker
+            status={voice.status}
+            transcript={voice.transcript}
+            targetRatio={voice.targetRatio}
+            scrollRatio={scrollRatio}
+            language={voice.language}
+            errorMessage={voice.errorMessage}
+            onStart={voice.start}
+            onStop={voice.stop}
+            onLanguageChange={voice.setLanguage}
           />
         )}
       </main>

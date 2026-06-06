@@ -430,6 +430,7 @@
 /* ── Fullscreen: hide editor, expand preview ─────────────── */
 .app.fullscreen .editor-panel,
 .app.fullscreen .divider,
-.app.fullscreen .op-dashboard {
+.app.fullscreen .op-dashboard,
+.app.fullscreen .vt-panel {
   display: none;
 }
