@@ -48,9 +48,26 @@ function fmtDate(ts: number): string {
   return d.toLocaleDateString('en', opts)
 }
 
+// Workspace persistence keys
+const LS_EDITOR_WIDTH     = 'tp_editor_width'
+const LS_EDITOR_COLLAPSED = 'tp_editor_collapsed'
+const LS_FOCUS_MODE       = 'tp_focus_mode'
+
+const EDITOR_MIN_W = 280
+const EDITOR_MAX_W = 720
+const EDITOR_DEFAULT_W = 480
+
+function loadEditorWidth(): number {
+  const raw = localStorage.getItem(LS_EDITOR_WIDTH)
+  if (!raw) return EDITOR_DEFAULT_W
+  const n = parseInt(raw, 10)
+  return isNaN(n) ? EDITOR_DEFAULT_W : Math.max(EDITOR_MIN_W, Math.min(EDITOR_MAX_W, n))
+}
+
 export default function App() {
   const { settings, update } = useSettings()
 
+  // ── Script management ──────────────────────────────────
   const [scripts, setScripts] = useState<Script[]>(bootstrapScripts)
   const [activeId, setActiveId] = useState<string>(bootstrapActiveId)
   const [libraryOpen, setLibraryOpen] = useState(false)
@@ -59,14 +76,16 @@ export default function App() {
   const [titleEditing, setTitleEditing] = useState(false)
   const [draftTitle, setDraftTitle] = useState('')
 
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>()
-  const savedTimerRef = useRef<ReturnType<typeof setTimeout>>()
+  const saveTimerRef  = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const savedTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const isInitialMount = useRef(true)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef   = useRef<HTMLInputElement>(null)
 
+  // ── Playback ───────────────────────────────────────────
   const [isPlaying, setIsPlaying] = useState(false)
   const [speed, setSpeed] = useState(60)
 
+  // ── Fullscreen / guide / countdown ────────────────────
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [guideVisible, setGuideVisible] = useState(true)
   const [guideColor, setGuideColor] = useState('#ffffff')
@@ -75,29 +94,42 @@ export default function App() {
   const [countdownActive, setCountdownActive] = useState(false)
   const [countdownValue, setCountdownValue] = useState(0)
 
-  // Collapsible appearance panel (hidden by default for a cleaner primary view)
+  // ── Settings panel (collapsible row 3) ────────────────
   const [settingsOpen, setSettingsOpen] = useState(false)
 
+  // ── Side panels ────────────────────────────────────────
   const [dashboardOpen, setDashboardOpen] = useState(false)
   const [voiceOpen, setVoiceOpen] = useState(false)
   const [outputConnected, setOutputConnected] = useState(false)
   const [scrollRatio, setScrollRatio] = useState(0)
 
-  const outputWindowRef = useRef<Window | null>(null)
-  const scrollRatioRef = useRef(0)
+  // ── Workspace ergonomics — persisted ──────────────────
+  const [editorWidth, setEditorWidth] = useState(loadEditorWidth)
+  const [editorCollapsed, setEditorCollapsed] = useState(
+    () => localStorage.getItem(LS_EDITOR_COLLAPSED) === 'true',
+  )
+  const [focusMode, setFocusMode] = useState(
+    () => localStorage.getItem(LS_FOCUS_MODE) === 'true',
+  )
+  const [isDragging, setIsDragging] = useState(false)
+
+  // ── Refs ───────────────────────────────────────────────
+  const outputWindowRef  = useRef<Window | null>(null)
+  const scrollRatioRef   = useRef(0)
   const dashboardTickRef = useRef(0)
-  const sendSyncRef = useRef<(msg: SyncMessage) => void>(() => {})
+  const sendSyncRef      = useRef<(msg: SyncMessage) => void>(() => {})
 
   const voiceTargetRatioRef = useRef<number | null>(null)
-  const voiceEnabledRef = useRef(false)
-  const voiceGraceUntilRef = useRef(0)
-  const scriptRef = useRef('')
+  const voiceEnabledRef     = useRef(false)
+  const voiceGraceUntilRef  = useRef(0)
+  const scriptRef           = useRef('')
 
-  const appRef = useRef<HTMLDivElement>(null)
+  const appRef     = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
-  const rafRef = useRef<number>(0)
+  const rafRef     = useRef<number>(0)
   const lastTimeRef = useRef<number | null>(null)
 
+  // ── Derived ────────────────────────────────────────────
   const activeScript = scripts.find(s => s.id === activeId) ?? scripts[0]
   const script = activeScript?.content ?? ''
   scriptRef.current = script
@@ -111,20 +143,35 @@ export default function App() {
 
   const stats = useMemo(() => {
     const trimmed = script.trim()
-    if (!trimmed) return { words: 0, chars: 0, duration: '0s' }
+    if (!trimmed) return { words: 0, chars: 0, duration: '0s', totalSecs: 0 }
     const words = trimmed.split(/\s+/).length
     const chars = script.length
     const totalSecs = Math.round((words / 130) * 60)
     const mins = Math.floor(totalSecs / 60)
     const secs = totalSecs % 60
-    return { words, chars, duration: mins > 0 ? `${mins}m ${secs}s` : `${secs}s` }
+    return { words, chars, duration: mins > 0 ? `${mins}m ${secs}s` : `${secs}s`, totalSecs }
   }, [script])
 
+  // ── Voice tracking ─────────────────────────────────────
   const voice = useVoiceTracking(script)
   const voiceActive = voice.status === 'listening'
   voiceTargetRatioRef.current = voice.targetRatio
   voiceEnabledRef.current = voiceActive
 
+  // ── Workspace persistence ──────────────────────────────
+  useEffect(() => {
+    localStorage.setItem(LS_EDITOR_WIDTH, String(editorWidth))
+  }, [editorWidth])
+
+  useEffect(() => {
+    localStorage.setItem(LS_EDITOR_COLLAPSED, String(editorCollapsed))
+  }, [editorCollapsed])
+
+  useEffect(() => {
+    localStorage.setItem(LS_FOCUS_MODE, String(focusMode))
+  }, [focusMode])
+
+  // ── BroadcastChannel ───────────────────────────────────
   const sendSync = useSyncChannel(useCallback((msg: SyncMessage) => {
     if (msg.type === 'pong') {
       setOutputConnected(true)
@@ -145,6 +192,7 @@ export default function App() {
     return () => clearInterval(id)
   }, [outputConnected])
 
+  // ── Output window ──────────────────────────────────────
   const openOutputWindow = useCallback(() => {
     if (outputWindowRef.current && !outputWindowRef.current.closed) {
       outputWindowRef.current.focus()
@@ -168,6 +216,7 @@ export default function App() {
     }
   }, [])
 
+  // ── Auto-save ──────────────────────────────────────────
   useEffect(() => {
     if (isInitialMount.current) { isInitialMount.current = false; return }
     setSaveStatus('saving')
@@ -185,6 +234,7 @@ export default function App() {
     }
   }, [scripts, activeId])
 
+  // ── Reset scroll when switching scripts ───────────────
   useEffect(() => {
     if (previewRef.current) previewRef.current.scrollTop = 0
     setIsPlaying(false)
@@ -194,6 +244,7 @@ export default function App() {
     scrollRatioRef.current = 0
   }, [activeId])
 
+  // ── Script CRUD ────────────────────────────────────────
   const patchScript = useCallback((id: string, patch: Partial<Script>) => {
     setScripts(prev => prev.map(s =>
       s.id === id ? { ...s, ...patch, updatedAt: Date.now() } : s,
@@ -243,6 +294,7 @@ export default function App() {
     }
   }, [scripts, activeId])
 
+  // ── Import / Export ────────────────────────────────────
   const importFile = useCallback((file: File) => {
     const reader = new FileReader()
     reader.onload = e => {
@@ -272,6 +324,7 @@ export default function App() {
     URL.revokeObjectURL(url)
   }, [activeScript])
 
+  // ── Play / pause ───────────────────────────────────────
   const handlePlayPress = useCallback(() => {
     if (countdownActive) {
       setCountdownActive(false)
@@ -294,6 +347,7 @@ export default function App() {
     return () => clearTimeout(t)
   }, [countdownActive, countdownValue])
 
+  // ── Space key ──────────────────────────────────────────
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement).tagName
@@ -306,6 +360,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [handlePlayPress])
 
+  // ── RAF scroll animation ───────────────────────────────
   useEffect(() => {
     if (!isPlaying && !voiceActive) {
       cancelAnimationFrame(rafRef.current)
@@ -318,9 +373,7 @@ export default function App() {
       lastTimeRef.current = ts
       const el = previewRef.current
       if (el) {
-        if (isPlaying) {
-          el.scrollTop += (speed * delta) / 1000
-        }
+        if (isPlaying) el.scrollTop += (speed * delta) / 1000
         const maxScroll = el.scrollHeight - el.clientHeight
         const vtRatio = voiceTargetRatioRef.current
         if (voiceEnabledRef.current && vtRatio !== null && maxScroll > 0 && ts > voiceGraceUntilRef.current) {
@@ -351,6 +404,7 @@ export default function App() {
     return () => { cancelAnimationFrame(rafRef.current); lastTimeRef.current = null }
   }, [isPlaying, speed, outputConnected, voiceActive])
 
+  // ── Fullscreen ─────────────────────────────────────────
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) appRef.current?.requestFullscreen()
     else document.exitFullscreen()
@@ -370,6 +424,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [toggleFullscreen])
 
+  // ── Jump / Reset ───────────────────────────────────────
   const jumpBy = useCallback((secs: number) => {
     voiceGraceUntilRef.current = performance.now() + 2000
     const el = previewRef.current
@@ -393,23 +448,73 @@ export default function App() {
     if (outputConnected) sendSyncRef.current({ type: 'seek', ratio: 0 })
   }, [outputConnected])
 
+  // ── Title inline editing ───────────────────────────────
   const startTitleEdit = () => {
     setDraftTitle(activeScript?.title ?? '')
     setTitleEditing(true)
   }
-
   const commitTitleEdit = () => {
     renameScript(activeId, draftTitle)
     setTitleEditing(false)
   }
 
+  // ── Resizable divider drag ─────────────────────────────
+  const handleDividerMouseDown = useCallback((e: React.MouseEvent) => {
+    if (editorCollapsed) return
+    e.preventDefault()
+
+    const startX = e.clientX
+    const startW = editorWidth
+
+    const onMove = (ev: MouseEvent) => {
+      const maxW = Math.min(EDITOR_MAX_W, window.innerWidth * 0.58)
+      setEditorWidth(Math.max(EDITOR_MIN_W, Math.min(maxW, startW + ev.clientX - startX)))
+    }
+    const onUp = () => {
+      setIsDragging(false)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+    }
+
+    setIsDragging(true)
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+  }, [editorCollapsed, editorWidth])
+
+  // ── Focus Mode ─────────────────────────────────────────
+  const handleFocusMode = useCallback(() => {
+    setFocusMode(prev => {
+      if (!prev) setLibraryOpen(false) // entering focus: hide library
+      return !prev
+    })
+  }, [])
+
   const isActive = isPlaying || countdownActive
 
+  // ── Progress readout ───────────────────────────────────
+  const pct = Math.round(scrollRatio * 100)
+  const remainSecs = Math.max(0, Math.round(stats.totalSecs * (1 - scrollRatio)))
+  const remainStr = remainSecs === 0
+    ? 'Complete'
+    : remainSecs >= 60
+      ? `~${Math.floor(remainSecs / 60)}m ${remainSecs % 60}s left`
+      : `~${remainSecs}s left`
+
+  const appClass = [
+    'app',
+    isFullscreen ? 'fullscreen' : '',
+    focusMode ? 'focus-mode' : '',
+  ].filter(Boolean).join(' ')
+
   return (
-    <div ref={appRef} className={`app${isFullscreen ? ' fullscreen' : ''}`}>
+    <div ref={appRef} className={appClass}>
       <header className="header">
 
-        {/* ── Row 1: App bar — brand · script meta · panel toggles ── */}
+        {/* ── Row 1: App bar ── */}
         <div className="header-row row-appbar">
           <div className="brand">
             <span className="brand-dot" />
@@ -476,7 +581,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* ── Row 2: Primary controls — the hero play + speed + countdown ── */}
+        {/* ── Row 2: Primary controls ── */}
         <div className="header-row row-primary">
           <button
             className={`btn-play-hero${isActive ? ' playing' : ''}`}
@@ -526,6 +631,14 @@ export default function App() {
           </button>
 
           <button
+            className={`btn-toggle${focusMode ? ' active' : ''}`}
+            onClick={handleFocusMode}
+            title={focusMode ? 'Exit Focus Mode — restore workspace' : 'Focus Mode — maximize teleprompter view'}
+          >
+            {focusMode ? '← Workspace' : '⊙ Focus'}
+          </button>
+
+          <button
             className={`btn-appearance-toggle${settingsOpen ? ' open' : ''}`}
             onClick={() => setSettingsOpen(o => !o)}
             title="Appearance settings"
@@ -535,7 +648,7 @@ export default function App() {
           </button>
         </div>
 
-        {/* ── Row 3: Collapsible appearance / typography / guide ── */}
+        {/* ── Row 3: Collapsible appearance settings ── */}
         {settingsOpen && (
           <div className="header-row row-settings">
             <div className="settings-group">
@@ -647,10 +760,21 @@ export default function App() {
         )}
       </header>
 
+      {/* ── Reading progress strip ── */}
+      <div className="progress-strip" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+        <div className="progress-fill" style={{ width: `${pct}%` }} />
+        <div className={`progress-labels${scrollRatio > 0 ? ' visible' : ''}`}>
+          <span className="progress-pct">{pct}%</span>
+          {stats.totalSecs > 0 && (
+            <span className="progress-remaining">{remainStr}</span>
+          )}
+        </div>
+      </div>
+
       <main className="main">
 
-        {/* ── Script Library sidebar ── */}
-        {libraryOpen && (
+        {/* ── Script library sidebar ── */}
+        {libraryOpen && !focusMode && (
           <ScriptLibrary
             scripts={filteredScripts}
             activeId={activeId}
@@ -664,54 +788,105 @@ export default function App() {
           />
         )}
 
-        {/* ── Editor panel ── */}
-        <section className="panel editor-panel">
-          <div className="editor-toolbar">
-            <label className="btn-tool" title="Import .txt or .md file">
-              ↓ Import
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".txt,.md"
-                style={{ display: 'none' }}
-                onChange={e => {
-                  const f = e.target.files?.[0]
-                  if (f) importFile(f)
-                  e.target.value = ''
-                }}
+        {/* ── Editor panel — always rendered when not in focus mode, width animates on collapse ── */}
+        {!focusMode && (
+          <section
+            className={`panel editor-panel${editorCollapsed ? ' collapsed' : ''}`}
+            style={{
+              width: editorCollapsed ? 48 : editorWidth,
+              minWidth: editorCollapsed ? 48 : EDITOR_MIN_W,
+              maxWidth: editorCollapsed ? 48 : EDITOR_MAX_W,
+            }}
+          >
+            {/* Collapsed strip — fades in when collapsed */}
+            <div
+              className="editor-collapsed-inner"
+              onClick={() => setEditorCollapsed(false)}
+              role="button"
+              tabIndex={editorCollapsed ? 0 : -1}
+              title="Click to expand script panel"
+              onKeyDown={e => e.key === 'Enter' && setEditorCollapsed(false)}
+            >
+              <span className="collapsed-expand-icon">›</span>
+              <span className="collapsed-script-label">Script</span>
+              <span className="collapsed-script-name">{activeScript?.title ?? 'Untitled'}</span>
+            </div>
+
+            {/* Expanded content — fades out when collapsed */}
+            <div className="editor-expanded-inner">
+              <div className="editor-toolbar">
+                <label className="btn-tool" title="Import .txt or .md file">
+                  ↓ Import
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".txt,.md"
+                    style={{ display: 'none' }}
+                    onChange={e => {
+                      const f = e.target.files?.[0]
+                      if (f) importFile(f)
+                      e.target.value = ''
+                    }}
+                  />
+                </label>
+                <button className="btn-tool" onClick={() => exportScript('txt')} title="Export as plain text">
+                  ↑ TXT
+                </button>
+                <button className="btn-tool" onClick={() => exportScript('md')} title="Export as Markdown">
+                  ↑ MD
+                </button>
+                <button
+                  className="btn-tool editor-collapse-btn"
+                  onClick={() => setEditorCollapsed(true)}
+                  title="Collapse panel"
+                >
+                  ‹
+                </button>
+              </div>
+
+              <textarea
+                className="script-editor"
+                value={script}
+                onChange={e => setScript(e.target.value)}
+                placeholder="Paste your script here…"
+                spellCheck={false}
+                tabIndex={editorCollapsed ? -1 : 0}
               />
-            </label>
-            <button className="btn-tool" onClick={() => exportScript('txt')} title="Export as plain text">
-              ↑ TXT
-            </button>
-            <button className="btn-tool" onClick={() => exportScript('md')} title="Export as Markdown">
-              ↑ MD
+
+              <div className="stats-bar">
+                <span>{stats.words.toLocaleString()} words</span>
+                <span>{stats.chars.toLocaleString()} chars</span>
+                <span>~{stats.duration} to read</span>
+                {activeScript && (
+                  <>
+                    <span className="stats-dot">·</span>
+                    <span>Created {fmtDate(activeScript.createdAt)}</span>
+                    <span>Modified {fmtDate(activeScript.updatedAt)}</span>
+                  </>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── Divider — drag to resize, hover to reveal collapse toggle ── */}
+        {!focusMode && (
+          <div
+            className={`divider${isDragging ? ' dragging' : ''}`}
+            style={{ cursor: editorCollapsed ? 'default' : 'col-resize' }}
+            onMouseDown={editorCollapsed ? undefined : handleDividerMouseDown}
+            title={editorCollapsed ? '' : 'Drag to resize'}
+          >
+            <button
+              className="divider-toggle"
+              onMouseDown={e => e.stopPropagation()}
+              onClick={() => setEditorCollapsed(c => !c)}
+              title={editorCollapsed ? 'Expand panel' : 'Collapse panel'}
+            >
+              {editorCollapsed ? '›' : '‹'}
             </button>
           </div>
-
-          <textarea
-            className="script-editor"
-            value={script}
-            onChange={e => setScript(e.target.value)}
-            placeholder="Paste your script here…"
-            spellCheck={false}
-          />
-
-          <div className="stats-bar">
-            <span>{stats.words.toLocaleString()} words</span>
-            <span>{stats.chars.toLocaleString()} chars</span>
-            <span>~{stats.duration} to read</span>
-            {activeScript && (
-              <>
-                <span className="stats-dot">·</span>
-                <span>Created {fmtDate(activeScript.createdAt)}</span>
-                <span>Modified {fmtDate(activeScript.updatedAt)}</span>
-              </>
-            )}
-          </div>
-        </section>
-
-        <div className="divider" />
+        )}
 
         {/* ── Teleprompter preview ── */}
         <section className="panel preview-panel">

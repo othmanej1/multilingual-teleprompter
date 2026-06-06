@@ -2,59 +2,61 @@
    Design tokens — Deloitte-inspired enterprise system
    ══════════════════════════════════════════════════════════
 
-   Background palette: three distinct navy surfaces
-     #0A0E1A  deepest — body / page canvas
-     #111827  elevated — header, panel shells
-     #1A2233  control — interactive elements
+   Typography:
+     UI:      Geist → Inter → system (Latin)
+              IBM Plex Sans Arabic activates automatically
+              for Arabic characters in the UI font stack
+     Content: Controlled independently per user setting
 
    Accent: #86BC25 (Deloitte green)
-     Applied ONLY to: primary action (Play), active states,
+     Applied ONLY to primary action (Play), active states,
      sliders, active toggles, voice indicators, success.
-     All other UI is neutral navy/gray — no green wash.
-
-   Text:
-     #FFFFFF   primary — maximum contrast for readability
-     #B8C1D1   secondary — Deloitte spec
-     #687099   labels / muted — readable at 12–13px
-     #2C3760   very muted — visual hints only
 
    ══════════════════════════════════════════════════════════ */
 :root {
-  /* Surfaces — layered navy */
-  --bg-base:      #0A0E1A;   /* Body canvas */
-  --bg-sunken:    #080C16;   /* Inset panels (sidebars, sidebar bg) */
-  --bg-surface:   #0C1020;   /* Editor surface */
-  --bg-elevated:  #111827;   /* Header, raised sections */
-  --bg-control:   #1A2233;   /* Buttons, inputs, selects */
-  --bg-hover:     #1F2A40;   /* Hover — one step lighter than control */
-  --bg-active:    #263250;   /* Active / pressed — deeper engagement */
+  /* Surfaces */
+  --bg-base:      #0A0E1A;
+  --bg-sunken:    #080C16;
+  --bg-surface:   #0C1020;
+  --bg-elevated:  #111827;
+  --bg-control:   #1A2233;
+  --bg-hover:     #1F2A40;
+  --bg-active:    #263250;
 
-  /* Borders — cool navy, not purple */
-  --border-dim:   #1C2640;   /* Subtle dividers between sections */
-  --border-ui:    #263550;   /* Standard control borders */
-  --border-hi:    #32446A;   /* Highlighted / interactive border */
-  --border-focus: #86BC25;   /* Keyboard focus indicator — Deloitte green */
+  /* Borders */
+  --border-dim:   #1C2640;
+  --border-ui:    #263550;
+  --border-hi:    #32446A;
+  --border-focus: #86BC25;
 
-  /* Text — four contrast levels */
-  --t1: #FFFFFF;             /* Primary — pure white for max readability */
-  --t2: #B8C1D1;             /* Secondary — Deloitte spec */
-  --t3: #687099;             /* Labels, placeholders, muted */
-  --t4: #2C3760;             /* Hints — barely visible background text */
+  /* Text */
+  --t1: #FFFFFF;
+  --t2: #B8C1D1;
+  --t3: #687099;
+  --t4: #2C3760;
 
-  /* Accent — Deloitte green, used sparingly */
+  /* Accent — Deloitte green */
   --accent:        #86BC25;
-  --accent-hover:  #74A81E;              /* Darker shade for hover */
+  --accent-hover:  #74A81E;
   --accent-dim:    rgba(134, 188, 37, 0.12);
   --accent-ring:   rgba(134, 188, 37, 0.30);
   --accent-glow:   rgba(134, 188, 37, 0.45);
   --accent-subtle: rgba(134, 188, 37, 0.07);
 
-  /* Semantic states */
+  /* Semantic */
   --danger:        #DC3545;
   --danger-hover:  #C42A37;
   --danger-ring:   rgba(220, 53, 69, 0.38);
-  --success:       #86BC25;              /* Aligned with brand — green = positive */
-  --warning:       #F59E0B;             /* Amber — browser compat warnings, etc. */
+  --success:       #86BC25;
+  --warning:       #F59E0B;
+
+  /* Typography
+     IBM Plex Sans Arabic sits after Inter in the stack so the
+     browser uses it automatically for Arabic code-points only.
+     Teleprompter content uses a separate user-controlled font. */
+  --font-ui: 'Geist', 'Inter', 'IBM Plex Sans Arabic',
+             -apple-system, BlinkMacSystemFont, 'Segoe UI',
+             'Noto Sans', sans-serif;
 
   /* Type scale */
   --text-2xs: 10px;
@@ -63,6 +65,13 @@
   --text-base: 13px;
   --text-md:  14px;
   --text-lg:  15px;
+  --text-xl:  17px;
+
+  /* Weight */
+  --fw-normal:  400;
+  --fw-medium:  500;
+  --fw-semibold: 600;
+  --fw-bold:    700;
 
   /* Radii */
   --r-xs: 4px;
@@ -76,26 +85,36 @@
   --gap-md: 10px;
   --gap-lg: 16px;
 
-  /* Control heights — consistent scale */
+  /* Control heights */
   --h-btn-sm:   28px;
   --h-btn:      32px;
   --h-btn-lg:   40px;
-  --h-btn-hero: 48px;
+  --h-btn-hero: 52px;   /* play button — slightly taller */
 
-  /* Slider width */
+  /* Slider */
   --slider-w: 110px;
 
   /* Row heights */
   --h-appbar:   52px;
-  --h-primary:  60px;
+  --h-primary:  64px;   /* slightly taller to give Play button breathing room */
   --h-settings: 44px;
+
+  /* Transitions — consistent motion language */
+  --t-fast:   80ms ease;
+  --t-std:    150ms ease;
+  --t-slow:   240ms cubic-bezier(0.4, 0, 0.2, 1);
+  --t-spring: 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Editor collapse */
+  --editor-collapsed-w: 48px;
 }
 
-/* ── Global focus-visible — enterprise accessibility ────── */
+/* ── Global focus-visible ───────────────────────────────── */
 :focus-visible {
   outline: 2px solid rgba(134, 188, 37, 0.55);
   outline-offset: 2px;
   border-radius: var(--r-xs);
+  transition: outline-color var(--t-std);
 }
 
 /* ── Reset ──────────────────────────────────────────────── */
@@ -109,7 +128,10 @@
   width: 100vw;
   background: var(--bg-base);
   color: var(--t1);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', sans-serif;
+  font-family: var(--font-ui);
+  font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
 }
 
@@ -168,7 +190,6 @@
   flex-shrink: 0;
 }
 
-/* Green dot — the single always-visible brand accent element */
 .brand-dot {
   width: 8px;
   height: 8px;
@@ -180,9 +201,9 @@
 
 .brand-name {
   font-size: var(--text-md);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   color: var(--t1);
-  letter-spacing: -0.1px;
+  letter-spacing: -0.2px;
   white-space: nowrap;
 }
 
@@ -193,7 +214,6 @@
   flex-shrink: 0;
 }
 
-/* Script metadata — title, word count, save indicator */
 .script-meta {
   display: flex;
   align-items: center;
@@ -204,7 +224,7 @@
 
 .meta-title {
   font-size: var(--text-md);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--t1);
   white-space: nowrap;
   overflow: hidden;
@@ -212,13 +232,14 @@
   cursor: default;
   max-width: 260px;
   flex-shrink: 1;
-  transition: color 0.12s;
+  transition: color var(--t-std);
+  letter-spacing: -0.1px;
 }
 .meta-title:hover { color: var(--t2); }
 
 .meta-title-input {
   font-size: var(--text-md);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--t1);
   background: var(--bg-control);
   border: 1px solid var(--border-focus);
@@ -228,6 +249,8 @@
   font-family: inherit;
   min-width: 160px;
   max-width: 260px;
+  letter-spacing: -0.1px;
+  transition: border-color var(--t-std);
 }
 
 .meta-stats {
@@ -238,6 +261,7 @@
   color: var(--t3);
   white-space: nowrap;
   flex-shrink: 0;
+  letter-spacing: 0.1px;
 }
 
 .meta-dot { color: var(--border-ui); }
@@ -245,14 +269,14 @@
 .meta-save {
   font-size: var(--text-xs);
   color: transparent;
-  transition: color 0.2s;
+  transition: color var(--t-std);
   white-space: nowrap;
   flex-shrink: 0;
+  letter-spacing: 0.1px;
 }
 .meta-save.saving { color: var(--t3); }
-.meta-save.saved  { color: var(--success); }   /* Green — success state */
+.meta-save.saved  { color: var(--success); }
 
-/* Panel toggles — right edge of app bar */
 .appbar-actions {
   display: flex;
   align-items: center;
@@ -262,67 +286,84 @@
 }
 
 /* ══════════════════════════════════════════════════════════
-   Primary action — the Play/Pause hero button
+   Primary action — Play / Pause hero button
 
-   This is the ONLY element allowed to use a filled green
-   background in the default (idle) state. Everything else
-   uses green only for active/selected indicators.
+   Dominant in the control bar:
+   • Tallest element (52px vs 32px for other buttons)
+   • Wider minimum (152px)
+   • Filled Deloitte green background
+   • Larger font-size and tighter letter-spacing
+   • Scale spring on :active for tactile feedback
+   • Smooth green→red transition when switching state
    ══════════════════════════════════════════════════════════ */
 .btn-play-hero {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
   height: var(--h-btn-hero);
-  min-width: 136px;
-  padding: 0 24px;
+  min-width: 152px;
+  padding: 0 28px;
   background: var(--accent);
   color: #fff;
   border: none;
   border-radius: var(--r-md);
-  font-size: var(--text-lg);
-  font-weight: 700;
+  font-size: var(--text-xl);
+  font-weight: var(--fw-bold);
   font-family: inherit;
+  letter-spacing: -0.2px;
   cursor: pointer;
-  letter-spacing: 0.1px;
   flex-shrink: 0;
-  transition: background 0.12s, box-shadow 0.12s, transform 0.08s;
-  /* Contained glow — not flashy, signals importance */
-  box-shadow: 0 2px 16px rgba(134, 188, 37, 0.28);
+  /* Smooth state transition — color, shadow, transform all together */
+  transition:
+    background var(--t-std),
+    box-shadow var(--t-std),
+    transform var(--t-fast);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.10) inset,
+    0 2px 16px rgba(134, 188, 37, 0.30);
 }
 .btn-play-hero:hover {
   background: var(--accent-hover);
-  box-shadow: 0 4px 22px rgba(134, 188, 37, 0.38);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.10) inset,
+    0 4px 24px rgba(134, 188, 37, 0.42);
   transform: translateY(-1px);
 }
-.btn-play-hero:active { transform: translateY(0); box-shadow: none; }
-
-/* Danger state (Pause / Cancel) — same green → red swap principle */
+.btn-play-hero:active {
+  transform: translateY(0) scale(0.97);
+  box-shadow: none;
+}
 .btn-play-hero.playing {
   background: var(--danger);
-  box-shadow: 0 2px 14px var(--danger-ring);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.08) inset,
+    0 2px 14px var(--danger-ring);
 }
 .btn-play-hero.playing:hover {
   background: var(--danger-hover);
-  box-shadow: 0 4px 20px rgba(220, 53, 69, 0.42);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.08) inset,
+    0 4px 20px rgba(220, 53, 69, 0.45);
 }
 
 .play-icon {
-  font-size: 16px;
+  font-size: 17px;
   line-height: 1;
+  display: flex;
+  align-items: center;
 }
 .play-label {
-  font-size: var(--text-lg);
-  font-weight: 700;
+  font-size: var(--text-xl);
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.2px;
 }
 
 /* ══════════════════════════════════════════════════════════
    Secondary buttons — transport, toggles, tools
 
-   These are deliberately neutral: dark surface, muted text,
-   subtle border. Green appears ONLY via .active modifier.
+   Neutral by default; green via .active only.
+   Shared motion: background + border-color + color together.
    ══════════════════════════════════════════════════════════ */
-
-/* Transport group (⏮ −5s +5s) */
 .transport-group {
   display: flex;
   align-items: center;
@@ -341,10 +382,15 @@
   border: 1px solid var(--border-ui);
   border-radius: var(--r-sm);
   font-size: var(--text-sm);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   font-family: inherit;
+  letter-spacing: 0.1px;
   cursor: pointer;
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  transition:
+    background var(--t-std),
+    border-color var(--t-std),
+    color var(--t-std),
+    transform var(--t-fast);
   white-space: nowrap;
 }
 .btn-transport:hover {
@@ -352,9 +398,11 @@
   color: var(--t1);
   border-color: var(--border-hi);
 }
-.btn-transport:active { background: var(--bg-active); }
+.btn-transport:active {
+  background: var(--bg-active);
+  transform: scale(0.95);
+}
 
-/* Standard secondary */
 .btn-secondary {
   display: inline-flex;
   align-items: center;
@@ -367,8 +415,13 @@
   border-radius: var(--r-md);
   font-size: var(--text-sm);
   font-family: inherit;
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.1px;
   cursor: pointer;
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  transition:
+    background var(--t-std),
+    border-color var(--t-std),
+    color var(--t-std);
   white-space: nowrap;
 }
 .btn-secondary:hover {
@@ -378,7 +431,6 @@
 }
 .btn-secondary:active { background: var(--bg-active); }
 
-/* Toggle — neutral by default, green ONLY when .active */
 .btn-toggle {
   display: inline-flex;
   align-items: center;
@@ -390,10 +442,15 @@
   border: 1px solid var(--border-ui);
   border-radius: var(--r-md);
   font-size: var(--text-sm);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   font-family: inherit;
+  letter-spacing: 0.1px;
   cursor: pointer;
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  transition:
+    background var(--t-std),
+    border-color var(--t-std),
+    color var(--t-std),
+    transform var(--t-fast);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -402,17 +459,20 @@
   color: var(--t1);
   border-color: var(--border-hi);
 }
-.btn-toggle:active { background: var(--bg-active); }
+.btn-toggle:active {
+  background: var(--bg-active);
+  transform: scale(0.96);
+}
 .btn-toggle.active {
   background: var(--accent-dim);
-  color: var(--accent);               /* Green text — active state */
+  color: var(--accent);
   border-color: var(--accent-ring);
 }
 .btn-toggle.active:hover {
   background: rgba(134, 188, 37, 0.18);
 }
 
-/* Appearance toggle — subtle pill, lives at row-primary right edge */
+/* Appearance pill — subtle, right-edge of primary row */
 .btn-appearance-toggle {
   display: inline-flex;
   align-items: center;
@@ -425,8 +485,13 @@
   border-radius: 999px;
   font-size: var(--text-xs);
   font-family: inherit;
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.2px;
   cursor: pointer;
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  transition:
+    background var(--t-std),
+    border-color var(--t-std),
+    color var(--t-std);
   white-space: nowrap;
   margin-left: auto;
   flex-shrink: 0;
@@ -446,9 +511,14 @@
   font-size: 8px;
   line-height: 1;
   opacity: 0.5;
+  transition: transform var(--t-std);
+}
+.btn-appearance-toggle.open .appearance-chevron {
+  transform: rotate(180deg);
+  opacity: 0.7;
 }
 
-/* Tool buttons (import / export in editor toolbar) */
+/* Tool buttons — editor toolbar */
 .btn-tool {
   display: inline-flex;
   align-items: center;
@@ -459,8 +529,13 @@
   border: 1px solid var(--border-ui);
   border-radius: var(--r-xs);
   font-size: var(--text-xs);
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.2px;
   cursor: pointer;
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  transition:
+    background var(--t-std),
+    border-color var(--t-std),
+    color var(--t-std);
   white-space: nowrap;
   font-family: inherit;
   user-select: none;
@@ -472,7 +547,7 @@
 }
 
 /* ══════════════════════════════════════════════════════════
-   Control group (.ctrl) — label + input + value
+   Control group — label + input + value
    ══════════════════════════════════════════════════════════ */
 .ctrl {
   display: flex;
@@ -482,11 +557,11 @@
 
 .ctrl label {
   font-size: var(--text-xs);
+  font-weight: var(--fw-medium);
   color: var(--t3);
   letter-spacing: 0.3px;
   white-space: nowrap;
   user-select: none;
-  font-weight: 500;
 }
 
 .val {
@@ -494,7 +569,8 @@
   color: var(--t2);
   min-width: 32px;
   font-variant-numeric: tabular-nums;
-  font-weight: 500;
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.1px;
 }
 
 /* ── Separator ──────────────────────────────────────────── */
@@ -506,7 +582,7 @@
   margin: 0 2px;
 }
 
-/* ── Slider — green thumb signals the active setting ────── */
+/* ── Slider ─────────────────────────────────────────────── */
 .slider {
   -webkit-appearance: none;
   appearance: none;
@@ -520,22 +596,24 @@
 }
 .slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 13px;
-  height: 13px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: var(--accent);        /* Green — active value indicator */
+  background: var(--accent);
   cursor: pointer;
   border: 2px solid var(--bg-elevated);
   box-shadow: 0 0 0 1px var(--accent-ring);
-  transition: box-shadow 0.12s, transform 0.08s;
+  transition:
+    box-shadow var(--t-std),
+    transform var(--t-std);
 }
 .slider::-webkit-slider-thumb:hover {
   box-shadow: 0 0 0 3px var(--accent-ring);
-  transform: scale(1.12);
+  transform: scale(1.15);
 }
 .slider::-moz-range-thumb {
-  width: 13px;
-  height: 13px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: var(--accent);
   border: 2px solid var(--bg-elevated);
@@ -551,6 +629,7 @@
   background: none;
   cursor: pointer;
   padding: 2px;
+  transition: border-color var(--t-std);
 }
 .cpicker:hover { border-color: var(--border-focus); }
 
@@ -563,10 +642,11 @@
   border: 1px solid var(--border-ui);
   border-radius: var(--r-sm);
   font-size: var(--text-sm);
+  font-family: inherit;
+  font-weight: var(--fw-medium);
   cursor: pointer;
   outline: none;
-  font-family: inherit;
-  transition: border-color 0.12s;
+  transition: border-color var(--t-std);
 }
 .sel:hover { border-color: var(--border-hi); }
 .sel:focus { border-color: var(--border-focus); }
@@ -578,10 +658,11 @@
   white-space: nowrap;
   margin-left: auto;
   padding-left: 8px;
+  letter-spacing: 0.2px;
 }
 
 /* ══════════════════════════════════════════════════════════
-   Collapsible settings row — sectioned groups
+   Settings row groups
    ══════════════════════════════════════════════════════════ */
 .settings-group {
   display: flex;
@@ -592,10 +673,10 @@
 
 .settings-group-label {
   font-size: var(--text-2xs);
+  font-weight: var(--fw-bold);
   text-transform: uppercase;
   letter-spacing: 0.9px;
   color: var(--t4);
-  font-weight: 700;
   white-space: nowrap;
   margin-right: 2px;
 }
@@ -606,6 +687,80 @@
   background: var(--border-dim);
   flex-shrink: 0;
   margin: 0 4px;
+}
+
+/* ══════════════════════════════════════════════════════════
+   Reading progress strip
+   — Self-contained 22px band below the header
+   — Top 3px: the visual fill bar
+   — Bottom 19px: the label row (fades in once scroll > 0)
+   ══════════════════════════════════════════════════════════ */
+.progress-strip {
+  height: 22px;
+  background: var(--bg-sunken);
+  border-bottom: 1px solid var(--border-dim);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;    /* labels stay inside the band */
+}
+
+/* Track background — full width, behind fill */
+.progress-strip::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--border-dim);
+  z-index: 0;
+}
+
+/* The 3px fill — renders above track */
+.progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: var(--accent);
+  border-radius: 0 2px 2px 0;
+  transition: width 0.3s linear;
+  min-width: 0;
+  max-width: 100%;
+  z-index: 1;
+}
+
+/* Label row — sits in the 19px below the bar */
+.progress-labels {
+  position: absolute;
+  top: 4px;
+  right: 16px;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0;
+  transition: opacity var(--t-slow);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.progress-labels.visible {
+  opacity: 1;
+}
+
+.progress-pct {
+  font-size: var(--text-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.4px;
+}
+
+.progress-remaining {
+  font-size: var(--text-xs);
+  color: var(--t3);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.1px;
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -623,18 +778,155 @@
   overflow: hidden;
 }
 
+/* ══════════════════════════════════════════════════════════
+   Interactive divider
+   ══════════════════════════════════════════════════════════ */
 .divider {
+  width: 8px;
+  flex-shrink: 0;
+  cursor: col-resize;
+  position: relative;
+  background: transparent;
+  user-select: none;
+}
+.divider::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
   width: 1px;
   background: var(--border-dim);
-  flex-shrink: 0;
+  transition: background var(--t-std);
+}
+.divider:hover::before { background: var(--border-ui); }
+.divider.dragging::before { background: var(--accent); }
+
+.divider-toggle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 18px;
+  height: 28px;
+  background: var(--bg-control);
+  border: 1px solid var(--border-ui);
+  border-radius: var(--r-xs);
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--t3);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition:
+    opacity var(--t-std),
+    background var(--t-std),
+    color var(--t-std);
+  padding: 0;
+  font-family: inherit;
+}
+.divider:hover .divider-toggle { opacity: 1; }
+.divider-toggle:hover {
+  background: var(--bg-hover);
+  color: var(--t1);
 }
 
-.editor-panel  { width: 36%; flex-shrink: 0; }
-.preview-panel { flex: 1; }
-
 /* ══════════════════════════════════════════════════════════
-   Editor panel
+   Editor panel — CSS-animated collapse
+
+   Width is set via inline style (JS-controlled).
+   The transition interpolates the JS-driven width change,
+   making collapse/expand smooth at ~240ms.
+
+   Two inner layers cross-fade:
+   • .editor-collapsed-inner  — the 48px strip (icon + name)
+   • .editor-expanded-inner   — full toolbar/textarea/stats
    ══════════════════════════════════════════════════════════ */
+.editor-panel {
+  flex-shrink: 0;
+  background: var(--bg-surface);
+  position: relative;
+  transition: width var(--t-slow), min-width var(--t-slow), max-width var(--t-slow);
+  overflow: hidden;
+}
+
+/* Collapsed strip — absolute, fills the 48px panel */
+.editor-collapsed-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0;
+  gap: 12px;
+  cursor: pointer;
+  background: var(--bg-surface);
+
+  /* Hidden by default; fades in when .collapsed is active */
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 160ms ease 80ms,  /* delay until width settles */
+    background var(--t-std);
+}
+.editor-panel.collapsed .editor-collapsed-inner {
+  opacity: 1;
+  pointer-events: auto;
+}
+.editor-collapsed-inner:hover { background: var(--bg-elevated); }
+
+.collapsed-expand-icon {
+  color: var(--t3);
+  font-size: 16px;
+  line-height: 1;
+  transition: color var(--t-std), transform var(--t-std);
+}
+.editor-collapsed-inner:hover .collapsed-expand-icon {
+  color: var(--accent);
+  transform: translateX(2px);
+}
+
+.collapsed-script-label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: var(--text-2xs);
+  font-weight: var(--fw-bold);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--t4);
+}
+
+.collapsed-script-name {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+  color: var(--t2);
+  max-height: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Expanded content — fades out as panel collapses */
+.editor-expanded-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  opacity: 1;
+  transition: opacity 120ms ease;
+  /* prevent collapsed-inner from being covered */
+  position: relative;
+  z-index: 1;
+}
+.editor-panel.collapsed .editor-expanded-inner {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Editor toolbar ─────────────────────────────────────── */
 .editor-toolbar {
   display: flex;
   align-items: center;
@@ -646,6 +938,14 @@
   flex-shrink: 0;
 }
 
+.editor-collapse-btn {
+  margin-left: auto;
+  font-size: 14px;
+  min-width: 28px;
+  padding: 0 6px;
+}
+
+/* ── Script textarea ────────────────────────────────────── */
 .script-editor {
   flex: 1;
   width: 100%;
@@ -655,11 +955,12 @@
   border: none;
   outline: none;
   resize: none;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans',
-    'Noto Sans Arabic', sans-serif;
+  /* Editor uses the UI font (with Arabic fallback built in) */
+  font-family: var(--font-ui);
   font-size: var(--text-md);
   line-height: 1.80;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.15px;
+  transition: color var(--t-std);
 }
 .script-editor::placeholder { color: var(--t3); }
 
@@ -675,9 +976,13 @@
   color: var(--t3);
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.1px;
 }
 
 .stats-dot { color: var(--border-dim); }
+
+/* ── Preview panel ──────────────────────────────────────── */
+.preview-panel { flex: 1; }
 
 /* ══════════════════════════════════════════════════════════
    Teleprompter preview
@@ -703,7 +1008,8 @@
 .tp-text {
   white-space: pre-wrap;
   word-break: break-word;
-  font-weight: 500;
+  font-weight: var(--fw-medium);
+  /* Content font is set by inline style from user settings */
 }
 
 /* ── Reading guide ──────────────────────────────────────── */
@@ -733,7 +1039,7 @@
 .countdown-number {
   display: block;
   font-size: 172px;
-  font-weight: 800;
+  font-weight: var(--fw-bold);
   color: #fff;
   line-height: 1;
   text-shadow:
@@ -750,11 +1056,20 @@
 }
 
 /* ══════════════════════════════════════════════════════════
-   Fullscreen — hide editor, sidebars, side panels
+   Fullscreen — hide side panels and progress strip
    ══════════════════════════════════════════════════════════ */
 .app.fullscreen .editor-panel,
 .app.fullscreen .divider,
 .app.fullscreen .op-dashboard,
-.app.fullscreen .vt-panel {
+.app.fullscreen .vt-panel,
+.app.fullscreen .progress-strip {
+  display: none;
+}
+
+/* ══════════════════════════════════════════════════════════
+   Focus mode — hide editor side entirely
+   ══════════════════════════════════════════════════════════ */
+.app.focus-mode .editor-panel,
+.app.focus-mode .divider {
   display: none;
 }
