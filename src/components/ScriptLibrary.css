@@ -102,7 +102,7 @@
 }
 .lib-item:hover { background: var(--bg-elevated); }
 .lib-item.active {
-  background: rgba(79, 110, 247, 0.07);
+  background: rgba(134, 188, 37, 0.07);  /* Deloitte green tint — active script */
   border-left-color: var(--accent);
 }
 

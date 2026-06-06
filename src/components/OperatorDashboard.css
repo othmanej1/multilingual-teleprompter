@@ -46,8 +46,8 @@
 .op-output-btn:hover { background: var(--bg-hover); color: var(--t1); border-color: var(--border-hi); }
 .op-output-btn.connected {
   color: var(--success);
-  border-color: rgba(74, 222, 128, 0.30);
-  background: rgba(74, 222, 128, 0.06);
+  border-color: rgba(134, 188, 37, 0.28);  /* Deloitte green border */
+  background: rgba(134, 188, 37, 0.07);
 }
 
 .op-output-dot {
@@ -59,7 +59,7 @@
 }
 .op-output-btn.connected .op-output-dot {
   background: var(--success);
-  box-shadow: 0 0 6px rgba(74, 222, 128, 0.70);
+  box-shadow: 0 0 5px rgba(134, 188, 37, 0.55);  /* Deloitte green glow */
   animation: op-blink 1.6s ease-in-out infinite;
 }
 @keyframes op-blink {
@@ -157,7 +157,7 @@
   background: var(--accent-hover);
   box-shadow: 0 2px 18px var(--accent-glow);
 }
-.op-play.playing { background: var(--danger); box-shadow: 0 2px 12px rgba(224,82,82,0.40); }
+.op-play.playing { background: var(--danger); box-shadow: 0 2px 12px rgba(220,53,69,0.38); }
 .op-play.playing:hover { background: var(--danger-hover); }
 .op-play:active { transform: scale(0.93); }
 
