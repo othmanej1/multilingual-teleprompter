@@ -573,6 +573,39 @@
   letter-spacing: 0.1px;
 }
 
+/* ── Font size presets ──────────────────────────────────── */
+.size-presets {
+  display: flex;
+  gap: 3px;
+}
+
+.btn-size-preset {
+  padding: 0 7px;
+  height: 22px;
+  border: 1px solid var(--border-ui);
+  border-radius: var(--r-xs);
+  background: var(--bg-control);
+  color: var(--t2);
+  font-size: var(--text-xs);
+  font-weight: var(--fw-semibold);
+  font-family: inherit;
+  cursor: pointer;
+  line-height: 1;
+  transition: background var(--t-std), border-color var(--t-std), color var(--t-std);
+}
+
+.btn-size-preset:hover {
+  border-color: var(--border-hi);
+  color: var(--t1);
+}
+
+.btn-size-preset.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #000;
+  font-weight: var(--fw-bold);
+}
+
 /* ── Separator ──────────────────────────────────────────── */
 .sep {
   width: 1px;

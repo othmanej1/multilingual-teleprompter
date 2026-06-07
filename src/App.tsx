@@ -843,6 +843,19 @@ export default function App() {
                 <span className="val">{settings.fontSize}px</span>
               </div>
               <div className="ctrl">
+                <label>Presets</label>
+                <div className="size-presets">
+                  {([{l:'S',v:24},{l:'M',v:36},{l:'L',v:52},{l:'XL',v:72}] as const).map(p => (
+                    <button
+                      key={p.l}
+                      className={`btn-size-preset${settings.fontSize === p.v ? ' active' : ''}`}
+                      onClick={() => update({ fontSize: p.v })}
+                      title={`${p.l}: ${p.v}px`}
+                    >{p.l}</button>
+                  ))}
+                </div>
+              </div>
+              <div className="ctrl">
                 <label>LH</label>
                 <input type="range" min={1} max={2.5} step={0.05} value={settings.lineHeight}
                   onChange={e => update({ lineHeight: +e.target.value })} className="slider" />

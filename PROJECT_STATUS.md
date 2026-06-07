@@ -254,7 +254,7 @@ type SyncMessage =
 - [x] Cue markers (`[CUE]` tags in script, styled inline as `▸ CUE` badges; `◀ Cue` / `Cue ▶` buttons in transport group and Operator Dashboard; `[` / `]` keyboard shortcuts; rendered in output window too)
 - [x] Presenter notes panel (separate from displayed text, visible to operator only; per-script; never broadcast; green dot indicator; auto-saved)
 - [x] Script position memory (scroll ratio saved per script to `tp_scroll_positions`; restored on switch via RAF; cleared on explicit reset; persisted on app close via `beforeunload`)
-- Font size presets (Quick 1-click size switching: Small / Medium / Large / XL)
+- [x] Font size presets (S=24 / M=36 / L=52 / XL=72 buttons in Typography panel; active preset highlights; slider stays for fine-tuning)
 
 ### Phase 5 — Production Polish
 - Keyboard shortcut reference overlay (press `?` to show all shortcuts)
