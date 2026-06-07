@@ -10,6 +10,7 @@ import { FONT_FAMILY_OPTIONS, fontFamilyCss } from './lib/settings'
 import { renderScript, countCues } from './lib/cues'
 import {
   loadScripts, persistScripts, loadActiveId, persistActiveId, makeScript,
+  loadScrollPositions, saveScrollPosition,
 } from './lib/storage'
 import type { Script, SaveStatus, SyncMessage } from './lib/types'
 
@@ -249,14 +250,50 @@ export default function App() {
     }
   }, [scripts, activeId])
 
-  // ── Reset scroll when switching scripts ───────────────
+  // ── Scroll position memory ────────────────────────────
+  // Cleanup runs before each script switch (and on unmount), saving the
+  // outgoing ratio. The effect body restores the saved ratio for the new
+  // script; RAF defers the DOM write until after React commits new content.
   useEffect(() => {
-    if (previewRef.current) previewRef.current.scrollTop = 0
+    const savedRatio = loadScrollPositions()[activeId] ?? 0
+
     setIsPlaying(false)
     setCountdownActive(false)
     setCountdownValue(0)
-    setScrollRatio(0)
-    scrollRatioRef.current = 0
+    setScrollRatio(savedRatio)
+    scrollRatioRef.current = savedRatio
+
+    if (previewRef.current) previewRef.current.scrollTop = 0
+    if (savedRatio > 0) {
+      requestAnimationFrame(() => {
+        const el = previewRef.current
+        if (!el) return
+        const maxScroll = el.scrollHeight - el.clientHeight
+        el.scrollTop = savedRatio * maxScroll
+      })
+    }
+
+    return () => { saveScrollPosition(activeId, scrollRatioRef.current) }
+  }, [activeId])
+
+  // Keep scrollRatioRef current during manual scroll (wheel, trackpad, drag)
+  // so saves always capture the real position, not just the playback position.
+  useEffect(() => {
+    const el = previewRef.current
+    if (!el) return
+    const onScroll = () => {
+      const maxScroll = el.scrollHeight - el.clientHeight
+      if (maxScroll > 0) scrollRatioRef.current = el.scrollTop / maxScroll
+    }
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => el.removeEventListener('scroll', onScroll)
+  }, []) // previewRef.current is stable after mount
+
+  // Save on browser close / refresh
+  useEffect(() => {
+    const save = () => saveScrollPosition(activeId, scrollRatioRef.current)
+    window.addEventListener('beforeunload', save)
+    return () => window.removeEventListener('beforeunload', save)
   }, [activeId])
 
   // ── Script CRUD ────────────────────────────────────────
@@ -461,7 +498,8 @@ export default function App() {
     scrollRatioRef.current = 0
     if (previewRef.current) previewRef.current.scrollTop = 0
     if (outputConnected) sendSyncRef.current({ type: 'seek', ratio: 0 })
-  }, [outputConnected])
+    saveScrollPosition(activeId, 0)  // clear saved position on explicit reset
+  }, [outputConnected, activeId])
 
   // ── Cue navigation ────────────────────────────────────
   const jumpToCue = useCallback((direction: 'prev' | 'next') => {

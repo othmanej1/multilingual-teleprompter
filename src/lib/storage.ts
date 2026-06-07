@@ -34,6 +34,30 @@ export function persistActiveId(id: string): void {
   }
 }
 
+const SCROLL_POS_KEY = 'tp_scroll_positions'
+
+export function loadScrollPositions(): Record<string, number> {
+  try {
+    const raw = localStorage.getItem(SCROLL_POS_KEY)
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
+}
+
+// ratio <= 0 removes the entry (treat as "no saved position")
+export function saveScrollPosition(scriptId: string, ratio: number): void {
+  try {
+    const positions = loadScrollPositions()
+    if (ratio <= 0) {
+      delete positions[scriptId]
+    } else {
+      positions[scriptId] = Math.min(1, ratio)
+    }
+    localStorage.setItem(SCROLL_POS_KEY, JSON.stringify(positions))
+  } catch {}
+}
+
 export function makeScript(title = 'Untitled Script', content = ''): Script {
   const now = Date.now()
   return {

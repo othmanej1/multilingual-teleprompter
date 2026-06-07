@@ -108,6 +108,7 @@ OutputView
 | `tp_scripts` | `Script[]` JSON | App.tsx (800ms debounce) | bootstrapScripts() on mount |
 | `tp_active` | active script id string | App.tsx (800ms debounce) | bootstrapActiveId() on mount |
 | `tp_settings` | `TypographySettings` JSON | SettingsContext (300ms debounce) | loadSettings() on mount |
+| `tp_scroll_positions` | `Record<string,number>` ratios | App.tsx (on switch / beforeunload / reset) | loadScrollPositions() on script switch |
 
 ---
 
@@ -251,8 +252,8 @@ type SyncMessage =
 
 ### Phase 5A — Presenter Experience
 - [x] Cue markers (`[CUE]` tags in script, styled inline as `▸ CUE` badges; `◀ Cue` / `Cue ▶` buttons in transport group and Operator Dashboard; `[` / `]` keyboard shortcuts; rendered in output window too)
-- Presenter notes panel (separate from displayed text, visible to operator only)
-- Script position memory (restore scroll position per script between sessions)
+- [x] Presenter notes panel (separate from displayed text, visible to operator only; per-script; never broadcast; green dot indicator; auto-saved)
+- [x] Script position memory (scroll ratio saved per script to `tp_scroll_positions`; restored on switch via RAF; cleared on explicit reset; persisted on app close via `beforeunload`)
 - Font size presets (Quick 1-click size switching: Small / Medium / Large / XL)
 
 ### Phase 5 — Production Polish
