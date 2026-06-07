@@ -11,8 +11,17 @@ function getModelsBasePath(): string {
     : join(app.getPath('userData'), 'models')
 }
 
+// Arabic dialects all share one model directory; add entries here for any
+// other language codes that should map to a shared folder.
+const LANG_MODEL_DIR: Record<string, string> = {
+  'ar-MA': 'ar',
+  'ar-SA': 'ar',
+  'ar-EG': 'ar',
+}
+
 function getModelDir(lang: string): string {
-  return join(getModelsBasePath(), lang)
+  const subdir = LANG_MODEL_DIR[lang] ?? lang
+  return join(getModelsBasePath(), subdir)
 }
 
 interface OnnxFiles {
