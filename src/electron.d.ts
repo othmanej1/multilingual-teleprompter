@@ -6,6 +6,9 @@ interface ElectronAPI {
   setPresentingState(isPresenting: boolean): void
   onMenuAction(callback: (action: string) => void): void
   offMenuAction(): void
+  getVersion(): Promise<string>
+  getUserDataPath(): Promise<string>
+  openUserDataFolder(): void
 }
 
 declare global {

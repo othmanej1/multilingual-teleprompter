@@ -60,6 +60,13 @@ ipcMain.on('set-presenting-state', (_event, value: boolean) => {
   isPresenting = value
 })
 
+// ── App info IPC ──────────────────────────────────────────
+ipcMain.handle('app:getVersion', () => app.getVersion())
+ipcMain.handle('app:getUserDataPath', () => app.getPath('userData'))
+ipcMain.on('app:openUserData', () => {
+  shell.openPath(app.getPath('userData')).catch(() => {})
+})
+
 // ── Menu action → renderer bridge ─────────────────────────
 // The native menu sends named actions to the renderer via IPC.
 // The preload exposes ipcRenderer.on('menu-action') via contextBridge.
@@ -194,6 +201,28 @@ function buildMenu(): void {
               { role: 'front' as const },
             ]
           : [{ role: 'close' as const }]),
+      ],
+    },
+
+    // ── Help ──
+    {
+      label: 'Help',
+      submenu: [
+        {
+          label: 'Keyboard Shortcuts',
+          accelerator: 'CmdOrCtrl+/',
+          click: () => sendMenuAction('show-shortcuts'),
+        },
+        { type: 'separator' as const },
+        {
+          label: 'Open App Data Folder',
+          click: () => shell.openPath(app.getPath('userData')).catch(() => {}),
+        },
+        { type: 'separator' as const },
+        {
+          label: `About TelePrompter`,
+          click: () => sendMenuAction('show-about'),
+        },
       ],
     },
   ]

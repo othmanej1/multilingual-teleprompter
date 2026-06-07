@@ -112,6 +112,8 @@ export default function App() {
   const [dashboardOpen, setDashboardOpen] = useState(false)
   const [voiceOpen, setVoiceOpen] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
+  const [aboutOpen, setAboutOpen] = useState(false)
+  const [userDataPath, setUserDataPath] = useState('')
   const [playlistOpen, setPlaylistOpen] = useState(false)
   const [versionOpen, setVersionOpen] = useState(false)
   const [activePlaylistId, setActivePlaylistId] = useState<string | null>(null)
@@ -753,10 +755,10 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [jumpToCue])
 
-  // ── Shortcuts overlay: ? to toggle, Escape to close ───
+  // ── Shortcuts / About overlay: ? to toggle, Escape to close ──
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { setShortcutsOpen(false); return }
+      if (e.key === 'Escape') { setShortcutsOpen(false); setAboutOpen(false); return }
       const tag = (e.target as HTMLElement).tagName
       if (tag === 'TEXTAREA' || tag === 'INPUT' || tag === 'SELECT') return
       if (e.key === '?') { e.preventDefault(); setShortcutsOpen(o => !o) }
@@ -764,6 +766,12 @@ export default function App() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
+
+  // ── About dialog: load userData path on first open ────
+  useEffect(() => {
+    if (!aboutOpen || userDataPath) return
+    window.electronAPI?.getUserDataPath().then(p => setUserDataPath(p)).catch(() => {})
+  }, [aboutOpen, userDataPath])
 
   // ── Title inline editing ───────────────────────────────
   const startTitleEdit = () => {
@@ -835,6 +843,8 @@ export default function App() {
       case 'open-output':        openOutputWindow(); break
       case 'prev-cue':           jumpToCue('prev'); break
       case 'next-cue':           jumpToCue('next'); break
+      case 'show-shortcuts':     setShortcutsOpen(true); break
+      case 'show-about':         setAboutOpen(true); break
     }
   }
 
@@ -1023,6 +1033,13 @@ export default function App() {
             title="Keyboard shortcuts [?]"
             aria-label="Keyboard shortcuts"
           >?</button>
+
+          <button
+            className={`btn-shortcuts-toggle${aboutOpen ? ' active' : ''}`}
+            onClick={() => setAboutOpen(o => !o)}
+            title="About TelePrompter"
+            aria-label="About"
+          >ℹ</button>
         </div>
 
         {/* ── Row 3: Collapsible appearance settings ── */}
@@ -1442,6 +1459,43 @@ export default function App() {
           />
         )}
       </main>
+
+      {/* ── About dialog ── */}
+      {aboutOpen && (
+        <div className="shortcuts-backdrop" onClick={() => setAboutOpen(false)}>
+          <div className="about-modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="About TelePrompter">
+            <div className="shortcuts-header">
+              <span className="shortcuts-title">About TelePrompter</span>
+              <button className="shortcuts-close" onClick={() => setAboutOpen(false)} aria-label="Close">✕</button>
+            </div>
+
+            <div className="about-body">
+              <div className="about-logo">T</div>
+              <p className="about-appname">TelePrompter</p>
+              <p className="about-version">Version {__APP_VERSION__}</p>
+              <p className="about-desc">
+                Multilingual teleprompter for professional script reading.
+                Supports Arabic (RTL), French, English, and more.
+              </p>
+
+              {userDataPath && (
+                <div className="about-datapath">
+                  <span className="about-datapath-label">App data location</span>
+                  <code className="about-datapath-val">{userDataPath}</code>
+                  <button
+                    className="about-open-btn"
+                    onClick={() => window.electronAPI?.openUserDataFolder()}
+                  >
+                    Open in Explorer
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <p className="shortcuts-footer">© 2025 – 2026</p>
+          </div>
+        </div>
+      )}
 
       {/* ── Keyboard shortcuts overlay ── */}
       {shortcutsOpen && (
