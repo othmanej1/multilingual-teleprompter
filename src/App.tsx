@@ -55,6 +55,7 @@ const LS_EDITOR_WIDTH     = 'tp_editor_width'
 const LS_EDITOR_COLLAPSED = 'tp_editor_collapsed'
 const LS_FOCUS_MODE       = 'tp_focus_mode'
 const LS_NOTES_OPEN       = 'tp_notes_open'
+const LS_HIGH_CONTRAST    = 'tp_high_contrast'
 
 const EDITOR_MIN_W = 280
 const EDITOR_MAX_W = 720
@@ -104,6 +105,9 @@ export default function App() {
   const [dashboardOpen, setDashboardOpen] = useState(false)
   const [voiceOpen, setVoiceOpen] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
+  const [highContrast, setHighContrast] = useState(() =>
+    localStorage.getItem(LS_HIGH_CONTRAST) === 'true'
+  )
   const [outputConnected, setOutputConnected] = useState(false)
   const [scrollRatio, setScrollRatio] = useState(0)
 
@@ -344,6 +348,12 @@ export default function App() {
     window.addEventListener('beforeunload', save)
     return () => window.removeEventListener('beforeunload', save)
   }, [activeId])
+
+  // Persist high-contrast preference
+  useEffect(() => {
+    if (highContrast) localStorage.setItem(LS_HIGH_CONTRAST, 'true')
+    else localStorage.removeItem(LS_HIGH_CONTRAST)
+  }, [highContrast])
 
   // ── Script CRUD ────────────────────────────────────────
   const patchScript = useCallback((id: string, patch: Partial<Script>) => {
@@ -700,6 +710,7 @@ export default function App() {
     'app',
     isFullscreen ? 'fullscreen' : '',
     focusMode ? 'focus-mode' : '',
+    highContrast ? 'high-contrast' : '',
   ].filter(Boolean).join(' ')
 
   return (
@@ -867,6 +878,11 @@ export default function App() {
                 <input type="color" value={settings.bgColor}
                   onChange={e => update({ bgColor: e.target.value })} className="cpicker" />
               </div>
+              <button
+                className={`btn-toggle${highContrast ? ' active' : ''}`}
+                onClick={() => setHighContrast(v => !v)}
+                title="High-contrast mode — maximum visibility for UI controls"
+              >◑ HC</button>
             </div>
 
             <div className="settings-divider" />

@@ -260,7 +260,7 @@ type SyncMessage =
 - [x] Keyboard shortcut reference overlay (`?` key or `?` button; `Esc`/backdrop to close; 3 sections: Playback / Navigation / Interface)
 - [x] `npm run build` passes clean (`tsc -b` + Vite bundle, 231 kB JS / 32 kB CSS); `vite preview` smoke-tested
 - [x] Touch / tablet support (swipe-to-scroll via `touch-action: pan-y`; pinch-to-zoom scales font size 16–96px, syncs to output window)
-- High-contrast accessibility mode
+- [x] High-contrast accessibility mode (◑ HC toggle in Colors panel; overrides CSS vars to pure-black bg + yellow accent; persisted; `@media (prefers-contrast: more)` auto-activates)
 - Print / PDF export of scripts
 
 ### Phase 6 — Multi-Script Workflow

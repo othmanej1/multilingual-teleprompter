@@ -1375,3 +1375,80 @@ kbd {
 .app.focus-mode .divider {
   display: none;
 }
+
+/* ══════════════════════════════════════════════════════════
+   High-contrast mode
+   Activated by:  (a) the ◑ HC toggle  → .app.high-contrast
+                  (b) OS / browser preference → prefers-contrast: more
+   Overrides CSS custom properties so every component inherits
+   the new values automatically via var().
+   ══════════════════════════════════════════════════════════ */
+.app.high-contrast {
+  /* Surfaces — true black base */
+  --bg-base:      #000000;
+  --bg-sunken:    #000000;
+  --bg-surface:   #0D0D0D;
+  --bg-elevated:  #161616;
+  --bg-control:   #202020;
+  --bg-hover:     #2C2C2C;
+  --bg-active:    #383838;
+
+  /* Borders — visibly bright */
+  --border-dim:   #4A4A4A;
+  --border-ui:    #888888;
+  --border-hi:    #C0C0C0;
+  --border-focus: #FFFF00;
+
+  /* Text — maximum contrast */
+  --t1: #FFFFFF;
+  --t2: #F0F0F0;
+  --t3: #B8B8B8;
+  --t4: #707070;
+
+  /* Accent — yellow (better WCAG ratio than green on dark) */
+  --accent:        #FFFF00;
+  --accent-hover:  #E6E600;
+  --accent-dim:    rgba(255, 255, 0, 0.14);
+  --accent-ring:   rgba(255, 255, 0, 0.40);
+  --accent-glow:   rgba(255, 255, 0, 0.50);
+  --accent-subtle: rgba(255, 255, 0, 0.07);
+}
+
+/* Play button: green text on yellow is unreadable — keep it black */
+.app.high-contrast .btn-play-hero {
+  color: #000000;
+}
+
+/* Focus ring — yellow in HC for visibility */
+.app.high-contrast :focus-visible {
+  outline-color: rgba(255, 255, 0, 0.85);
+}
+
+/* Respect OS-level "increase contrast" preference automatically */
+@media (prefers-contrast: more) {
+  .app {
+    --bg-base:      #000000;
+    --bg-sunken:    #000000;
+    --bg-surface:   #0D0D0D;
+    --bg-elevated:  #161616;
+    --bg-control:   #202020;
+    --bg-hover:     #2C2C2C;
+    --bg-active:    #383838;
+    --border-dim:   #4A4A4A;
+    --border-ui:    #888888;
+    --border-hi:    #C0C0C0;
+    --border-focus: #FFFF00;
+    --t1: #FFFFFF;
+    --t2: #F0F0F0;
+    --t3: #B8B8B8;
+    --t4: #707070;
+    --accent:        #FFFF00;
+    --accent-hover:  #E6E600;
+    --accent-dim:    rgba(255, 255, 0, 0.14);
+    --accent-ring:   rgba(255, 255, 0, 0.40);
+    --accent-glow:   rgba(255, 255, 0, 0.50);
+    --accent-subtle: rgba(255, 255, 0, 0.07);
+  }
+  .app .btn-play-hero { color: #000000; }
+  .app :focus-visible { outline-color: rgba(255, 255, 0, 0.85); }
+}
