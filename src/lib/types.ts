@@ -3,8 +3,31 @@ export interface Script {
   title: string
   content: string
   notes: string    // operator-only; never sent to the output window
+  folderId: string | null  // null = uncategorized
   createdAt: number // Unix ms
   updatedAt: number // Unix ms
+}
+
+export interface Folder {
+  id: string
+  name: string
+  createdAt: number
+}
+
+export interface Playlist {
+  id: string
+  name: string
+  scriptIds: string[]
+  createdAt: number
+  updatedAt: number
+}
+
+export interface ScriptVersion {
+  id: string
+  scriptId: string
+  content: string
+  savedAt: number
+  label: string  // '' = auto-snapshot; user string = manual label
 }
 
 export type SaveStatus = 'idle' | 'saving' | 'saved'
@@ -27,5 +50,6 @@ export type SyncMessage =
   | { type: 'settings-patch'; patch: Partial<TypographySettings> }
   | { type: 'frame'; ratio: number }
   | { type: 'seek'; ratio: number }
+  | { type: 'voice-pos'; ratio: number | null }
   | { type: 'ping' }
   | { type: 'pong' }

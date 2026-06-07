@@ -25,6 +25,16 @@
     'Arabic Typesetting', 'Simplified Arabic', Arial, sans-serif;
 }
 
+/* ── Active paragraph highlight (voice tracking) ───────── */
+.output-text .tp-active-para {
+  background: rgba(134, 188, 37, 0.10);
+  border-radius: 2px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  padding: 0 3px;
+  margin: 0 -3px;
+}
+
 /* ── Cue marker (shared with main window) ────────────────── */
 .tp-cue {
   display: inline-block;

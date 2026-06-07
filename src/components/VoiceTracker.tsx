@@ -10,9 +10,15 @@ interface Props {
   scrollRatio: number
   language: string
   errorMessage: string | null
+  anchorPct: number
+  zonePct: number
+  autoCenter: boolean
   onStart: () => void
   onStop: () => void
   onLanguageChange: (lang: string) => void
+  onAnchorChange: (pct: number) => void
+  onZoneChange: (pct: number) => void
+  onAutoCenterChange: (enabled: boolean) => void
 }
 
 const STATUS_LABEL: Record<VoiceStatus, string> = {
@@ -35,7 +41,9 @@ const STATUS_COLOR: Record<VoiceStatus, string> = {
 
 export const VoiceTracker = memo(function VoiceTracker({
   status, transcript, targetRatio, scrollRatio, language, errorMessage,
+  anchorPct, zonePct, autoCenter,
   onStart, onStop, onLanguageChange,
+  onAnchorChange, onZoneChange, onAutoCenterChange,
 }: Props) {
   const isListening = status === 'listening'
   const isStarting = status === 'starting'
@@ -86,6 +94,49 @@ export const VoiceTracker = memo(function VoiceTracker({
           </button>
         )}
       </div>
+
+      {/* ── Scroll tracking config ── */}
+      <div className="vt-section-label">Scroll Tracking</div>
+
+      <div className="vt-row">
+        <span className="vt-label">Auto-center</span>
+        <button
+          className={`vt-btn-sm${autoCenter ? ' active' : ''}`}
+          onClick={() => onAutoCenterChange(!autoCenter)}
+          title="Keep spoken text aligned to the reading anchor"
+        >
+          {autoCenter ? 'On' : 'Off'}
+        </button>
+      </div>
+
+      {autoCenter && (
+        <>
+          <div className="vt-row">
+            <span className="vt-label">Anchor</span>
+            <input
+              type="range"
+              min={30} max={70} step={5}
+              value={anchorPct}
+              onChange={e => onAnchorChange(+e.target.value)}
+              className="slider vt-slider"
+              title="Viewport position to keep the spoken text at"
+            />
+            <span className="vt-val">{anchorPct}%</span>
+          </div>
+          <div className="vt-row">
+            <span className="vt-label">Zone ±</span>
+            <input
+              type="range"
+              min={2} max={20} step={1}
+              value={zonePct}
+              onChange={e => onZoneChange(+e.target.value)}
+              className="slider vt-slider"
+              title="Dead zone — only scroll when text drifts this far from anchor"
+            />
+            <span className="vt-val">{zonePct}%</span>
+          </div>
+        </>
+      )}
 
       {transcript && (
         <div className="vt-transcript-box">

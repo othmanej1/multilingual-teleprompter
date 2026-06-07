@@ -10,8 +10,12 @@ export function OutputView() {
   const { settings } = useSettings()
   const [script, setScript] = useState('')
   const [connected, setConnected] = useState(false)
+  const [voiceRatio, setVoiceRatio] = useState<number | null>(null)
+  const scriptRef = useRef('')
   const scrollRef = useRef<HTMLDivElement>(null)
   const rafRef = useRef<number>(0)
+
+  scriptRef.current = script
 
   function applyRatio(ratio: number) {
     cancelAnimationFrame(rafRef.current)
@@ -29,6 +33,8 @@ export function OutputView() {
       setConnected(true)
     } else if (msg.type === 'frame' || msg.type === 'seek') {
       applyRatio(msg.ratio)
+    } else if (msg.type === 'voice-pos') {
+      setVoiceRatio(msg.ratio)
     } else if (msg.type === 'ping') {
       send({ type: 'pong' })
     }
@@ -68,7 +74,13 @@ export function OutputView() {
             textAlign: settings.textAlign,
           }}
         >
-          {renderScript(script)}
+          {renderScript(script, voiceRatio !== null
+            ? Math.min(
+                Math.max(script.split(/\n\n+/).length - 1, 0),
+                Math.floor(voiceRatio * script.split(/\n\n+/).length)
+              )
+            : null
+          )}
         </div>
       </div>
     </div>

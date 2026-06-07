@@ -3,8 +3,13 @@ import './App.css'
 import { ScriptLibrary } from './components/ScriptLibrary'
 import { OperatorDashboard } from './components/OperatorDashboard'
 import { VoiceTracker } from './components/VoiceTracker'
+import { PlaylistPanel } from './components/PlaylistPanel'
+import { VersionPanel } from './components/VersionPanel'
 import { useSyncChannel } from './hooks/useSyncChannel'
 import { useVoiceTracking } from './hooks/useVoiceTracking'
+import { useFolders } from './hooks/useFolders'
+import { usePlaylists } from './hooks/usePlaylists'
+import { useVersions } from './hooks/useVersions'
 import { useSettings } from './contexts/SettingsContext'
 import { FONT_FAMILY_OPTIONS, fontFamilyCss } from './lib/settings'
 import { renderScript, countCues } from './lib/cues'
@@ -12,7 +17,7 @@ import {
   loadScripts, persistScripts, loadActiveId, persistActiveId, makeScript,
   loadScrollPositions, saveScrollPosition,
 } from './lib/storage'
-import type { Script, SaveStatus, SyncMessage } from './lib/types'
+import type { Script, Playlist, ScriptVersion, SaveStatus, SyncMessage } from './lib/types'
 
 const SAMPLE = `Welcome to your professional teleprompter.
 
@@ -56,6 +61,9 @@ const LS_EDITOR_COLLAPSED = 'tp_editor_collapsed'
 const LS_FOCUS_MODE       = 'tp_focus_mode'
 const LS_NOTES_OPEN       = 'tp_notes_open'
 const LS_HIGH_CONTRAST    = 'tp_high_contrast'
+const LS_VOICE_ANCHOR     = 'tp_voice_anchor'
+const LS_VOICE_ZONE       = 'tp_voice_zone'
+const LS_VOICE_AUTOCTR    = 'tp_voice_autoctr'
 
 const EDITOR_MIN_W = 280
 const EDITOR_MAX_W = 720
@@ -75,7 +83,6 @@ export default function App() {
   const [scripts, setScripts] = useState<Script[]>(bootstrapScripts)
   const [activeId, setActiveId] = useState<string>(bootstrapActiveId)
   const [libraryOpen, setLibraryOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [titleEditing, setTitleEditing] = useState(false)
   const [draftTitle, setDraftTitle] = useState('')
@@ -105,6 +112,21 @@ export default function App() {
   const [dashboardOpen, setDashboardOpen] = useState(false)
   const [voiceOpen, setVoiceOpen] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
+  const [playlistOpen, setPlaylistOpen] = useState(false)
+  const [versionOpen, setVersionOpen] = useState(false)
+  const [activePlaylistId, setActivePlaylistId] = useState<string | null>(null)
+  const [playlistIdx, setPlaylistIdx] = useState(0)
+  const [voiceAnchorPct, setVoiceAnchorPct] = useState(() => {
+    const v = parseInt(localStorage.getItem(LS_VOICE_ANCHOR) ?? '', 10)
+    return isNaN(v) ? 50 : Math.max(30, Math.min(70, v))
+  })
+  const [voiceZonePct, setVoiceZonePct] = useState(() => {
+    const v = parseInt(localStorage.getItem(LS_VOICE_ZONE) ?? '', 10)
+    return isNaN(v) ? 10 : Math.max(2, Math.min(20, v))
+  })
+  const [voiceAutoCenter, setVoiceAutoCenter] = useState(() =>
+    localStorage.getItem(LS_VOICE_AUTOCTR) !== 'false'
+  )
   const [highContrast, setHighContrast] = useState(() =>
     localStorage.getItem(LS_HIGH_CONTRAST) === 'true'
   )
@@ -140,17 +162,24 @@ export default function App() {
   const rafRef     = useRef<number>(0)
   const lastTimeRef = useRef<number | null>(null)
 
+  const autoPlayRef         = useRef(false)
+  const sessionVersionedRef = useRef<Set<string>>(new Set())
+  const activePlaylistIdRef = useRef<string | null>(null)
+  const playlistsRef        = useRef<Playlist[]>([])
+  const playlistIdxRef      = useRef(0)
+  const activeScriptRef     = useRef<Script | undefined>(undefined)
+  const voiceAnchorPctRef   = useRef(50)
+  const voiceZonePctRef     = useRef(10)
+  const voiceAutoCenterRef  = useRef(true)
+
   // ── Derived ────────────────────────────────────────────
   const activeScript = scripts.find(s => s.id === activeId) ?? scripts[0]
   const script = activeScript?.content ?? ''
   scriptRef.current = script
-
-  const filteredScripts = useMemo(
-    () => searchQuery
-      ? scripts.filter(s => s.title.toLowerCase().includes(searchQuery.toLowerCase()))
-      : scripts,
-    [scripts, searchQuery],
-  )
+  activeScriptRef.current = activeScript
+  voiceAnchorPctRef.current  = voiceAnchorPct
+  voiceZonePctRef.current    = voiceZonePct
+  voiceAutoCenterRef.current = voiceAutoCenter
 
   const stats = useMemo(() => {
     const trimmed = script.trim()
@@ -165,11 +194,32 @@ export default function App() {
 
   const cueCount = useMemo(() => countCues(script), [script])
 
+  // ── Phase 6 hooks ──────────────────────────────────────
+  const { folders, createFolder, renameFolder, deleteFolder } = useFolders()
+  const {
+    playlists, createPlaylist, renamePlaylist, deletePlaylist,
+    addScript: addToPlaylist, removeScript: removeFromPlaylist,
+    moveScript: moveInPlaylist, removeScriptFromAll,
+  } = usePlaylists()
+  const { versions, saveVersion, deleteVersion, pruneForScript } = useVersions()
+
+  // Keep refs in sync for RAF closure (avoids stale captures)
+  activePlaylistIdRef.current = activePlaylistId
+  playlistsRef.current        = playlists
+  playlistIdxRef.current      = playlistIdx
+
   // ── Voice tracking ─────────────────────────────────────
   const voice = useVoiceTracking(script)
   const voiceActive = voice.status === 'listening'
   voiceTargetRatioRef.current = voice.targetRatio
   voiceEnabledRef.current = voiceActive
+
+  // Paragraph index corresponding to the current voice position (for active highlight)
+  const voiceActivePara = useMemo(() => {
+    if (voice.targetRatio === null || !script.trim()) return null
+    const paragraphs = script.split(/\n\n+/)
+    return Math.min(paragraphs.length - 1, Math.floor(voice.targetRatio * paragraphs.length))
+  }, [voice.targetRatio, script])
 
   // ── Workspace persistence ──────────────────────────────
   useEffect(() => {
@@ -187,6 +237,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem(LS_NOTES_OPEN, String(notesOpen))
   }, [notesOpen])
+
+  useEffect(() => { localStorage.setItem(LS_VOICE_ANCHOR, String(voiceAnchorPct)) }, [voiceAnchorPct])
+  useEffect(() => { localStorage.setItem(LS_VOICE_ZONE, String(voiceZonePct)) }, [voiceZonePct])
+  useEffect(() => { localStorage.setItem(LS_VOICE_AUTOCTR, String(voiceAutoCenter)) }, [voiceAutoCenter])
 
   // ── BroadcastChannel ───────────────────────────────────
   const sendSync = useSyncChannel(useCallback((msg: SyncMessage) => {
@@ -208,6 +262,12 @@ export default function App() {
     const id = setInterval(() => sendSyncRef.current({ type: 'ping' }), 3000)
     return () => clearInterval(id)
   }, [outputConnected])
+
+  // Sync voice position to output window for active paragraph highlight
+  useEffect(() => {
+    if (!outputConnected) return
+    sendSyncRef.current({ type: 'voice-pos', ratio: voiceActive ? voice.targetRatio : null })
+  }, [voice.targetRatio, outputConnected, voiceActive])
 
   // ── Output window ──────────────────────────────────────
   const openOutputWindow = useCallback(() => {
@@ -276,6 +336,12 @@ export default function App() {
         const maxScroll = el.scrollHeight - el.clientHeight
         el.scrollTop = savedRatio * maxScroll
       })
+    }
+
+    // Playlist auto-advance: resume playback after brief pause to let new content render
+    if (autoPlayRef.current) {
+      autoPlayRef.current = false
+      setTimeout(() => setIsPlaying(true), 800)
     }
 
     return () => { saveScrollPosition(activeId, scrollRatioRef.current) }
@@ -363,8 +429,13 @@ export default function App() {
   }, [])
 
   const setScript = useCallback((content: string) => {
+    // Auto-snapshot once per session at the first edit — captures state before editing begins
+    if (!sessionVersionedRef.current.has(activeId) && activeScriptRef.current?.content.trim()) {
+      sessionVersionedRef.current.add(activeId)
+      saveVersion(activeId, activeScriptRef.current.content, '')
+    }
     patchScript(activeId, { content })
-  }, [activeId, patchScript])
+  }, [activeId, patchScript, saveVersion])
 
   const createNewScript = useCallback(() => {
     const s = makeScript('Untitled Script', '')
@@ -391,6 +462,8 @@ export default function App() {
   }, [patchScript])
 
   const deleteScript = useCallback((id: string) => {
+    pruneForScript(id)
+    removeScriptFromAll(id)
     const idx = scripts.findIndex(s => s.id === id)
     const remaining = scripts.filter(s => s.id !== id)
     if (remaining.length === 0) {
@@ -403,7 +476,7 @@ export default function App() {
     if (id === activeId) {
       setActiveId((remaining[Math.max(0, idx - 1)] ?? remaining[0]).id)
     }
-  }, [scripts, activeId])
+  }, [scripts, activeId, pruneForScript, removeScriptFromAll])
 
   // ── Import / Export ────────────────────────────────────
   const importFile = useCallback((file: File) => {
@@ -487,11 +560,17 @@ export default function App() {
         if (isPlaying) el.scrollTop += (speed * delta) / 1000
         const maxScroll = el.scrollHeight - el.clientHeight
         const vtRatio = voiceTargetRatioRef.current
-        if (voiceEnabledRef.current && vtRatio !== null && maxScroll > 0 && ts > voiceGraceUntilRef.current) {
-          const targetScrollTop = vtRatio * maxScroll
+        if (voiceEnabledRef.current && vtRatio !== null && maxScroll > 0 && ts > voiceGraceUntilRef.current && voiceAutoCenterRef.current) {
+          // Position matched word at anchor (not top edge): anchor formula
+          const anchorFraction = voiceAnchorPctRef.current / 100
+          const targetScrollTop = Math.max(0, Math.min(maxScroll,
+            vtRatio * (maxScroll + el.clientHeight) - anchorFraction * el.clientHeight
+          ))
+          // Reading zone: only correct when text has drifted outside the zone
+          const zoneHalf = (voiceZonePctRef.current / 100) * el.clientHeight
           const diff = targetScrollTop - el.scrollTop
           const absDiff = Math.abs(diff)
-          if (absDiff > 80) {
+          if (absDiff > zoneHalf) {
             const maxStep = Math.min(absDiff * 0.5, 300) * delta / 1000
             el.scrollTop += Math.sign(diff) * maxStep
           }
@@ -504,6 +583,20 @@ export default function App() {
           dashboardTickRef.current = ts
         }
         if (el.scrollTop + el.clientHeight >= el.scrollHeight - 2) {
+          const aplId = activePlaylistIdRef.current
+          if (aplId) {
+            const pl = playlistsRef.current.find(p => p.id === aplId)
+            const idx = playlistIdxRef.current
+            if (pl && idx < pl.scriptIds.length - 1) {
+              const nextIdx = idx + 1
+              setPlaylistIdx(nextIdx)
+              setActiveId(pl.scriptIds[nextIdx])
+              autoPlayRef.current = true
+              setScrollRatio(1)
+              return
+            }
+            setActivePlaylistId(null)
+          }
           setIsPlaying(false)
           setScrollRatio(1)
           return
@@ -559,6 +652,36 @@ export default function App() {
     if (outputConnected) sendSyncRef.current({ type: 'seek', ratio: 0 })
     saveScrollPosition(activeId, 0)  // clear saved position on explicit reset
   }, [outputConnected, activeId])
+
+  // ── Phase 6 handlers ──────────────────────────────────
+
+  const handleDeleteFolder = useCallback((id: string) => {
+    // Move all scripts in that folder to uncategorized before deleting the folder
+    setScripts(prev => prev.map(s => s.folderId === id ? { ...s, folderId: null } : s))
+    deleteFolder(id)
+  }, [deleteFolder])
+
+  const handleMoveToFolder = useCallback((scriptId: string, folderId: string | null) => {
+    patchScript(scriptId, { folderId })
+  }, [patchScript])
+
+  const handleActivatePlaylist = useCallback((playlistId: string) => {
+    const pl = playlists.find(p => p.id === playlistId)
+    if (!pl || pl.scriptIds.length === 0) return
+    setActivePlaylistId(playlistId)
+    setPlaylistIdx(0)
+    setActiveId(pl.scriptIds[0])
+  }, [playlists])
+
+  const handleDeactivatePlaylist = useCallback(() => {
+    setActivePlaylistId(null)
+  }, [])
+
+  const handleRestoreVersion = useCallback((v: ScriptVersion) => {
+    // Save current content before overwriting
+    saveVersion(activeId, script, '(before restore)')
+    patchScript(activeId, { content: v.content })
+  }, [activeId, script, saveVersion, patchScript])
 
   // ── Cue navigation ────────────────────────────────────
   const jumpToCue = useCallback((direction: 'prev' | 'next') => {
@@ -780,6 +903,20 @@ export default function App() {
               title="Voice tracking"
             >
               🎙 Voice
+            </button>
+            <button
+              className={`btn-toggle${playlistOpen ? ' active' : ''}`}
+              onClick={() => setPlaylistOpen(o => !o)}
+              title="Script playlists"
+            >
+              ≡ Lists
+            </button>
+            <button
+              className={`btn-toggle${versionOpen ? ' active' : ''}`}
+              onClick={() => setVersionOpen(o => !o)}
+              title="Version history for active script"
+            >
+              ⧖ Versions
             </button>
           </div>
         </div>
@@ -1009,15 +1146,18 @@ export default function App() {
         {/* ── Script library sidebar ── */}
         {libraryOpen && !focusMode && (
           <ScriptLibrary
-            scripts={filteredScripts}
+            scripts={scripts}
             activeId={activeId}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
+            folders={folders}
             onSelect={id => setActiveId(id)}
             onCreate={createNewScript}
             onRename={renameScript}
             onDelete={deleteScript}
             onDuplicate={duplicateScript}
+            onCreateFolder={createFolder}
+            onRenameFolder={renameFolder}
+            onDeleteFolder={handleDeleteFolder}
+            onMoveToFolder={handleMoveToFolder}
           />
         )}
 
@@ -1169,7 +1309,7 @@ export default function App() {
                   textAlign: settings.textAlign,
                 }}
               >
-                {script ? renderScript(script) : 'Your script will appear here…'}
+                {script ? renderScript(script, voiceActivePara) : 'Your script will appear here…'}
               </div>
             </div>
 
@@ -1178,6 +1318,22 @@ export default function App() {
                 className="reading-guide"
                 style={{ backgroundColor: guideColor, opacity: guideOpacity }}
               />
+            )}
+
+            {voiceActive && (
+              <>
+                <div
+                  className="voice-zone-overlay"
+                  style={{
+                    top: `${voiceAnchorPct - voiceZonePct}%`,
+                    height: `${voiceZonePct * 2}%`,
+                  }}
+                />
+                <div
+                  className="voice-anchor-line"
+                  style={{ top: `${voiceAnchorPct}%` }}
+                />
+              </>
             )}
 
             {countdownActive && countdownValue > 0 && (
@@ -1216,9 +1372,47 @@ export default function App() {
             scrollRatio={scrollRatio}
             language={voice.language}
             errorMessage={voice.errorMessage}
+            anchorPct={voiceAnchorPct}
+            zonePct={voiceZonePct}
+            autoCenter={voiceAutoCenter}
             onStart={voice.start}
             onStop={voice.stop}
             onLanguageChange={voice.setLanguage}
+            onAnchorChange={setVoiceAnchorPct}
+            onZoneChange={setVoiceZonePct}
+            onAutoCenterChange={setVoiceAutoCenter}
+          />
+        )}
+
+        {/* ── Playlist Panel ── */}
+        {playlistOpen && !focusMode && (
+          <PlaylistPanel
+            playlists={playlists}
+            scripts={scripts}
+            activePlaylistId={activePlaylistId}
+            playlistIdx={playlistIdx}
+            onCreate={createPlaylist}
+            onDelete={deletePlaylist}
+            onRename={renamePlaylist}
+            onAddScript={addToPlaylist}
+            onRemoveScript={removeFromPlaylist}
+            onMoveScript={moveInPlaylist}
+            onActivate={handleActivatePlaylist}
+            onDeactivate={handleDeactivatePlaylist}
+            onSelectScript={id => setActiveId(id)}
+          />
+        )}
+
+        {/* ── Version Panel ── */}
+        {versionOpen && !focusMode && (
+          <VersionPanel
+            scriptId={activeId}
+            scriptTitle={activeScript?.title ?? 'Untitled'}
+            currentContent={script}
+            versions={versions}
+            onSave={saveVersion}
+            onRestore={handleRestoreVersion}
+            onDelete={deleteVersion}
           />
         )}
       </main>

@@ -1,0 +1,224 @@
+/* ── Shell ───────────────────────────────────────────────── */
+.version-panel {
+  width: 260px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-sunken);
+  border-left: 1px solid var(--border-dim);
+  overflow: hidden;
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+.vp-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid var(--border-dim);
+  flex-shrink: 0;
+}
+
+.vp-title {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--t3);
+  font-weight: var(--fw-semibold);
+}
+
+.vp-script-name {
+  font-size: var(--text-sm);
+  color: var(--t2);
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Save row ────────────────────────────────────────────── */
+.vp-save-row {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-dim);
+  flex-shrink: 0;
+}
+
+.vp-label-input {
+  flex: 1;
+  height: 30px;
+  padding: 0 8px;
+  background: var(--bg-control);
+  color: var(--t1);
+  border: 1px solid var(--border-ui);
+  border-radius: var(--r-sm);
+  font-size: var(--text-sm);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.vp-label-input::placeholder { color: var(--t4); }
+.vp-label-input:focus { border-color: var(--border-focus); }
+
+.vp-save-btn {
+  height: 30px;
+  padding: 0 12px;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: var(--r-sm);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.vp-save-btn:hover { background: var(--accent-hover); }
+
+/* ── Version list ────────────────────────────────────────── */
+.vp-list {
+  flex: 1;
+  overflow-y: auto;
+  list-style: none;
+  padding: 4px 0;
+  margin: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg-active) transparent;
+}
+
+.vp-empty {
+  padding: 20px 14px;
+  font-size: var(--text-sm);
+  color: var(--t3);
+  text-align: center;
+  line-height: 1.6;
+}
+.vp-empty strong { color: var(--t2); }
+
+/* ── Version item ────────────────────────────────────────── */
+.vp-item {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-dim);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.vp-item:last-child { border-bottom: none; }
+
+.vp-item-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vp-item-ts {
+  font-size: var(--text-xs);
+  color: var(--t3);
+  flex: 1;
+}
+
+.vp-item-label {
+  font-size: var(--text-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--accent);
+  background: var(--accent-dim);
+  padding: 1px 6px;
+  border-radius: var(--r-xs);
+  max-width: 100px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vp-item-label.auto {
+  color: var(--t4);
+  background: var(--bg-active);
+}
+
+.vp-item-preview {
+  font-size: var(--text-xs);
+  color: var(--t3);
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Actions ─────────────────────────────────────────────── */
+.vp-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vp-btn-restore {
+  height: 24px;
+  padding: 0 8px;
+  background: var(--bg-elevated);
+  color: var(--t2);
+  border: 1px solid var(--border-ui);
+  border-radius: var(--r-sm);
+  font-size: var(--text-xs);
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.vp-btn-restore:hover { background: var(--bg-hover); color: var(--t1); border-color: var(--border-hi); }
+
+.vp-btn-delete {
+  height: 24px;
+  width: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  color: var(--t4);
+  border: none;
+  border-radius: var(--r-sm);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: all 0.12s;
+  margin-left: auto;
+}
+.vp-btn-delete:hover { background: var(--bg-hover); color: var(--danger); }
+
+/* ── Inline confirm ──────────────────────────────────────── */
+.vp-confirm-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vp-confirm-msg {
+  font-size: var(--text-xs);
+  color: var(--t2);
+  flex: 1;
+}
+
+.vp-confirm-yes {
+  height: 24px;
+  padding: 0 8px;
+  background: var(--danger);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-sm);
+  font-size: var(--text-xs);
+  font-weight: var(--fw-semibold);
+  font-family: inherit;
+  cursor: pointer;
+}
+.vp-confirm-yes:hover { background: var(--danger-hover); }
+
+.vp-confirm-no {
+  height: 24px;
+  padding: 0 8px;
+  background: var(--bg-hover);
+  color: var(--t2);
+  border: none;
+  border-radius: var(--r-sm);
+  font-size: var(--text-xs);
+  font-family: inherit;
+  cursor: pointer;
+}
+.vp-confirm-no:hover { background: var(--bg-active); color: var(--t1); }

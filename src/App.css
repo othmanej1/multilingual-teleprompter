@@ -1140,6 +1140,38 @@
   pointer-events: none;
 }
 
+/* ── Active paragraph highlight (voice tracking) ───────── */
+.tp-text .tp-active-para {
+  background: rgba(134, 188, 37, 0.10);
+  border-radius: 2px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  padding: 0 3px;
+  margin: 0 -3px;
+}
+
+/* ── Voice reading-zone overlay ─────────────────────────── */
+.voice-zone-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  background: rgba(134, 188, 37, 0.04);
+  border-top: 1px solid rgba(134, 188, 37, 0.12);
+  border-bottom: 1px solid rgba(134, 188, 37, 0.12);
+  z-index: 4;
+}
+
+.voice-anchor-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  pointer-events: none;
+  background: rgba(134, 188, 37, 0.30);
+  z-index: 4;
+}
+
 /* ── Reading guide ──────────────────────────────────────── */
 .reading-guide {
   position: absolute;
