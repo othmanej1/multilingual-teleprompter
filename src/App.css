@@ -1183,6 +1183,180 @@
 }
 
 /* ══════════════════════════════════════════════════════════
+   Keyboard shortcuts toggle button
+   ══════════════════════════════════════════════════════════ */
+.btn-shortcuts-toggle {
+  padding: 0;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border-ui);
+  border-radius: 50%;
+  background: var(--bg-control);
+  color: var(--t3);
+  font-size: var(--text-md);
+  font-weight: var(--fw-bold);
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--t-std), border-color var(--t-std), color var(--t-std);
+  flex-shrink: 0;
+}
+.btn-shortcuts-toggle:hover {
+  border-color: var(--border-hi);
+  color: var(--t1);
+}
+.btn-shortcuts-toggle.active {
+  background: var(--bg-active);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ══════════════════════════════════════════════════════════
+   Keyboard shortcuts overlay
+   ══════════════════════════════════════════════════════════ */
+.shortcuts-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fade-in 0.15s ease;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.shortcuts-modal {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-ui);
+  border-radius: var(--r-lg);
+  padding: 24px 28px;
+  min-width: 340px;
+  max-width: 440px;
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: modal-up 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes modal-up {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.shortcuts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.shortcuts-title {
+  font-size: var(--text-lg);
+  font-weight: var(--fw-bold);
+  color: var(--t1);
+  letter-spacing: -0.2px;
+}
+
+.shortcuts-close {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--border-ui);
+  border-radius: 50%;
+  background: var(--bg-control);
+  color: var(--t3);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--t-std), color var(--t-std);
+}
+.shortcuts-close:hover {
+  background: var(--bg-hover);
+  color: var(--t1);
+}
+
+.shortcuts-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.shortcuts-section-label {
+  display: block;
+  font-size: var(--text-2xs);
+  font-weight: var(--fw-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--t4);
+  margin-bottom: 8px;
+}
+
+.shortcuts-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 7px 16px;
+  margin: 0;
+}
+
+.shortcuts-list dt {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.shortcuts-list dd {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--t2);
+  display: flex;
+  align-items: center;
+}
+
+kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 7px;
+  min-width: 24px;
+  background: var(--bg-control);
+  border: 1px solid var(--border-hi);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: "Courier New", Courier, monospace;
+  font-weight: var(--fw-bold);
+  color: var(--t1);
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.shortcuts-list dd code {
+  font-size: 11px;
+  font-family: "Courier New", Courier, monospace;
+  color: var(--accent);
+  background: var(--bg-control);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.shortcuts-footer {
+  margin: 18px 0 0;
+  font-size: var(--text-xs);
+  color: var(--t4);
+  text-align: center;
+}
+
+/* ══════════════════════════════════════════════════════════
    Fullscreen — hide side panels and progress strip
    ══════════════════════════════════════════════════════════ */
 .app.fullscreen .editor-panel,

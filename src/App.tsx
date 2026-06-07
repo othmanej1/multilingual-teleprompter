@@ -103,6 +103,7 @@ export default function App() {
   // ── Side panels ────────────────────────────────────────
   const [dashboardOpen, setDashboardOpen] = useState(false)
   const [voiceOpen, setVoiceOpen] = useState(false)
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [outputConnected, setOutputConnected] = useState(false)
   const [scrollRatio, setScrollRatio] = useState(0)
 
@@ -546,6 +547,18 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [jumpToCue])
 
+  // ── Shortcuts overlay: ? to toggle, Escape to close ───
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setShortcutsOpen(false); return }
+      const tag = (e.target as HTMLElement).tagName
+      if (tag === 'TEXTAREA' || tag === 'INPUT' || tag === 'SELECT') return
+      if (e.key === '?') { e.preventDefault(); setShortcutsOpen(o => !o) }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   // ── Title inline editing ───────────────────────────────
   const startTitleEdit = () => {
     setDraftTitle(activeScript?.title ?? '')
@@ -782,6 +795,13 @@ export default function App() {
             ⚙ Appearance
             <span className="appearance-chevron">{settingsOpen ? '▲' : '▼'}</span>
           </button>
+
+          <button
+            className={`btn-shortcuts-toggle${shortcutsOpen ? ' active' : ''}`}
+            onClick={() => setShortcutsOpen(o => !o)}
+            title="Keyboard shortcuts [?]"
+            aria-label="Keyboard shortcuts"
+          >?</button>
         </div>
 
         {/* ── Row 3: Collapsible appearance settings ── */}
@@ -1138,6 +1158,44 @@ export default function App() {
           />
         )}
       </main>
+
+      {/* ── Keyboard shortcuts overlay ── */}
+      {shortcutsOpen && (
+        <div className="shortcuts-backdrop" onClick={() => setShortcutsOpen(false)}>
+          <div className="shortcuts-modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
+            <div className="shortcuts-header">
+              <span className="shortcuts-title">Keyboard Shortcuts</span>
+              <button className="shortcuts-close" onClick={() => setShortcutsOpen(false)} aria-label="Close">✕</button>
+            </div>
+
+            <div className="shortcuts-body">
+              <div className="shortcuts-section">
+                <span className="shortcuts-section-label">Playback</span>
+                <dl className="shortcuts-list">
+                  <dt><kbd>Space</kbd></dt><dd>Play / Pause</dd>
+                  <dt><kbd>F11</kbd></dt><dd>Toggle fullscreen</dd>
+                </dl>
+              </div>
+              <div className="shortcuts-section">
+                <span className="shortcuts-section-label">Navigation</span>
+                <dl className="shortcuts-list">
+                  <dt><kbd>[</kbd></dt><dd>Jump to previous <code>[CUE]</code></dd>
+                  <dt><kbd>]</kbd></dt><dd>Jump to next <code>[CUE]</code></dd>
+                </dl>
+              </div>
+              <div className="shortcuts-section">
+                <span className="shortcuts-section-label">Interface</span>
+                <dl className="shortcuts-list">
+                  <dt><kbd>?</kbd></dt><dd>Show / hide shortcuts</dd>
+                  <dt><kbd>Esc</kbd></dt><dd>Close this overlay</dd>
+                </dl>
+              </div>
+            </div>
+
+            <p className="shortcuts-footer">Press <kbd>?</kbd> or <kbd>Esc</kbd> to close</p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

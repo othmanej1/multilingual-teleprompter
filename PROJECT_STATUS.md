@@ -257,7 +257,7 @@ type SyncMessage =
 - [x] Font size presets (S=24 / M=36 / L=52 / XL=72 buttons in Typography panel; active preset highlights; slider stays for fine-tuning)
 
 ### Phase 5 — Production Polish
-- Keyboard shortcut reference overlay (press `?` to show all shortcuts)
+- [x] Keyboard shortcut reference overlay (`?` key or `?` button; `Esc`/backdrop to close; 3 sections: Playback / Navigation / Interface)
 - `npm run build` validation + `vite preview` test
 - Touch / tablet support (pinch-to-zoom font size, swipe to scroll)
 - High-contrast accessibility mode
