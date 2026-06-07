@@ -1418,6 +1418,8 @@ export default function App() {
             anchorPct={voiceAnchorPct}
             zonePct={voiceZonePct}
             autoCenter={voiceAutoCenter}
+            engine={voice.engine}
+            modelPath={voice.modelPath}
             onStart={voice.start}
             onStop={voice.stop}
             onLanguageChange={voice.setLanguage}

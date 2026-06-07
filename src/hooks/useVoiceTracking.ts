@@ -11,6 +11,8 @@ export interface VoiceTrackingResult {
   start: () => void
   stop: () => void
   errorMessage: string | null
+  engine: 'browser' | 'electron-offline'
+  modelPath: string | null
 }
 
 export const VOICE_LANGUAGES = [
@@ -79,25 +81,26 @@ function estimatePosition(scriptWords: string[], recentWords: string[]): number 
 }
 
 export function useVoiceTracking(script: string): VoiceTrackingResult {
+  // Determine engine type once — stable for the lifetime of the component
+  const isElectron = typeof window !== 'undefined' && !!(window as Window).electronAPI?.speech
+
   const SpeechRec =
-    typeof window !== 'undefined'
+    !isElectron && typeof window !== 'undefined'
       ? (window.SpeechRecognition ?? window.webkitSpeechRecognition ?? null)
       : null
-  const isSupported = SpeechRec !== null
+  const isSupported = isElectron || SpeechRec !== null
 
   const [status, setStatus] = useState<VoiceStatus>(isSupported ? 'idle' : 'unsupported')
   const [transcript, setTranscript] = useState('')
   const [targetRatio, setTargetRatio] = useState<number | null>(null)
   const [language, setLanguage] = useState('en-US')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [modelPath, setModelPath] = useState<string | null>(null)
 
-  const recRef = useRef<SpeechRecognition | null>(null)
+  // ── Shared refs ─────────────────────────────────────────────
   const activeRef = useRef(false)
-  const isListeningRef = useRef(false)
-  const startTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const langRef = useRef(language)
   const scriptWordsRef = useRef<string[]>([])
-  const createAndStartRef = useRef<((isInitial?: boolean) => void) | null>(null)
 
   langRef.current = language
 
@@ -105,11 +108,23 @@ export function useVoiceTracking(script: string): VoiceTrackingResult {
     scriptWordsRef.current = normalizeWords(script)
   }, [script])
 
+  // ── Web Speech refs ──────────────────────────────────────────
+  const recRef = useRef<SpeechRecognition | null>(null)
+  const isListeningRef = useRef(false)
+  const startTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const createAndStartRef = useRef<((isInitial?: boolean) => void) | null>(null)
+
+  // ── Electron offline refs ────────────────────────────────────
+  const audioCtxRef = useRef<AudioContext | null>(null)
+  const micStreamRef = useRef<MediaStream | null>(null)
+  const processorRef = useRef<ScriptProcessorNode | null>(null)
+  const elCompletedTextsRef = useRef<string[]>([])
+  const elPartialRef = useRef<string>('')
+
+  // ── Web Speech implementation ────────────────────────────────
   const createAndStart = useCallback((isInitial = false) => {
     if (!SpeechRec || !activeRef.current) return
 
-    // On the user-triggered start: show "Starting…" and arm a 5s timeout.
-    // If onstart never fires (no audio device, network issue, etc.), show an error.
     if (isInitial) {
       isListeningRef.current = false
       clearTimeout(startTimeoutRef.current)
@@ -145,7 +160,6 @@ export function useVoiceTracking(script: string): VoiceTrackingResult {
       }
       const words = normalizeWords(accumulated)
       const recent = words.slice(-200)
-      // Show only the last 15 words so the UI doesn't overflow
       setTranscript(recent.slice(-15).join(' '))
       setTargetRatio(estimatePosition(scriptWordsRef.current, recent))
     }
@@ -163,7 +177,6 @@ export function useVoiceTracking(script: string): VoiceTrackingResult {
 
     rec.onend = () => {
       if (activeRef.current) {
-        // Browser auto-stops after silence; restart after a short delay
         setTimeout(() => {
           if (activeRef.current) createAndStartRef.current?.()
         }, 300)
@@ -177,7 +190,6 @@ export function useVoiceTracking(script: string): VoiceTrackingResult {
       rec.start()
     } catch {
       if (isInitial) {
-        // Synchronous throw on first attempt → surface the error immediately
         clearTimeout(startTimeoutRef.current)
         activeRef.current = false
         setStatus('error')
@@ -192,42 +204,214 @@ export function useVoiceTracking(script: string): VoiceTrackingResult {
 
   createAndStartRef.current = createAndStart
 
-  const start = useCallback(() => {
-    if (!isSupported || activeRef.current) return
+  // ── Electron offline implementation ─────────────────────────
+  const stopElectronAudio = useCallback(() => {
+    processorRef.current?.disconnect()
+    processorRef.current = null
+    audioCtxRef.current?.close().catch(() => {})
+    audioCtxRef.current = null
+    micStreamRef.current?.getTracks().forEach(t => t.stop())
+    micStreamRef.current = null
+  }, [])
+
+  const startElectron = useCallback(() => {
+    if (activeRef.current) return
+    const eAPI = (window as Window).electronAPI!
+
     activeRef.current = true
     setStatus('starting')
     setTranscript('')
     setTargetRatio(null)
     setErrorMessage(null)
-    createAndStart(true)
-  }, [isSupported, createAndStart])
+    elCompletedTextsRef.current = []
+    elPartialRef.current = ''
 
-  const stop = useCallback(() => {
-    clearTimeout(startTimeoutRef.current)
+    eAPI.speech.check(langRef.current)
+      .then(check => {
+        if (!activeRef.current) return undefined
+        setModelPath(check.modelPath)
+        if (!check.available) {
+          activeRef.current = false
+          setStatus('error')
+          const missing = check.missingFiles ? ` (missing: ${check.missingFiles.join(', ')})` : ''
+          setErrorMessage(`Speech model not found${missing}.\nPlace files in: ${check.modelPath}`)
+          return undefined
+        }
+        return eAPI.speech.start(langRef.current)
+      })
+      .then(result => {
+        if (!result || !activeRef.current) return undefined
+        if (!result.ok) {
+          activeRef.current = false
+          setStatus('error')
+          setErrorMessage(result.error ?? 'Recognizer failed to start')
+          return undefined
+        }
+        return navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+      })
+      .then(micStream => {
+        if (!micStream || !activeRef.current) {
+          micStream?.getTracks().forEach(t => t.stop())
+          return
+        }
+        micStreamRef.current = micStream
+        const ctx = new AudioContext({ sampleRate: 16000 })
+        audioCtxRef.current = ctx
+        const source = ctx.createMediaStreamSource(micStream)
+        // bufferSize 4096 = 256ms at 16kHz; fires ~4x/sec
+        const processor = ctx.createScriptProcessor(4096, 1, 1)
+        processorRef.current = processor
+        processor.onaudioprocess = (e: AudioProcessingEvent) => {
+          if (!activeRef.current) return
+          eAPI.speech.sendAudio(new Float32Array(e.inputBuffer.getChannelData(0)))
+        }
+        source.connect(processor)
+        processor.connect(ctx.destination)
+        setStatus('listening')
+      })
+      .catch(err => {
+        if (!activeRef.current) return
+        activeRef.current = false
+        stopElectronAudio()
+        eAPI.speech.stop()
+        if (err instanceof DOMException && err.name === 'NotAllowedError') {
+          setStatus('denied')
+          setErrorMessage('Microphone access denied.')
+        } else {
+          setStatus('error')
+          setErrorMessage(err instanceof Error ? err.message : 'Could not start voice recognition')
+        }
+      })
+  }, [stopElectronAudio])
+
+  const stopElectron = useCallback(() => {
     activeRef.current = false
-    isListeningRef.current = false
-    try { recRef.current?.stop() } catch { /* ignore */ }
-    recRef.current = null
+    stopElectronAudio()
+    ;(window as Window).electronAPI?.speech.stop()
     setStatus('idle')
     setTranscript('')
     setTargetRatio(null)
     setErrorMessage(null)
+  }, [stopElectronAudio])
+
+  // ── Result listener (Electron only, registered once on mount) ──
+  useEffect(() => {
+    if (!isElectron) return
+    const eAPI = (window as Window).electronAPI!
+
+    eAPI.speech.onResult(({ text, isFinal }) => {
+      if (!activeRef.current) return
+      if (isFinal) {
+        if (text) elCompletedTextsRef.current.push(text)
+        elPartialRef.current = ''
+      } else {
+        elPartialRef.current = text
+      }
+      const allText = [...elCompletedTextsRef.current, elPartialRef.current]
+        .filter(Boolean).join(' ')
+      const words = normalizeWords(allText).slice(-200)
+      setTranscript(words.slice(-15).join(' '))
+      setTargetRatio(estimatePosition(scriptWordsRef.current, words))
+    })
+
+    eAPI.speech.onError(({ message }) => {
+      if (!activeRef.current) return
+      setStatus('error')
+      setErrorMessage(`Recognition error: ${message}`)
+    })
+
+    return () => {
+      eAPI.speech.offResult()
+      eAPI.speech.offError()
+    }
+  // isElectron is stable for the component's lifetime
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Restart recognition when language changes while listening
-  useEffect(() => {
-    if (activeRef.current && recRef.current) {
-      try { recRef.current.stop() } catch { /* onend restarts with new langRef */ }
+  // ── Combined start / stop ────────────────────────────────────
+  const start = useCallback(() => {
+    if (isElectron) {
+      startElectron()
+    } else {
+      if (!isSupported || activeRef.current) return
+      activeRef.current = true
+      setStatus('starting')
+      setTranscript('')
+      setTargetRatio(null)
+      setErrorMessage(null)
+      createAndStart(true)
     }
+  }, [isElectron, isSupported, createAndStart, startElectron])
+
+  const stop = useCallback(() => {
+    if (isElectron) {
+      stopElectron()
+    } else {
+      clearTimeout(startTimeoutRef.current)
+      activeRef.current = false
+      isListeningRef.current = false
+      try { recRef.current?.stop() } catch { /* ignore */ }
+      recRef.current = null
+      setStatus('idle')
+      setTranscript('')
+      setTargetRatio(null)
+      setErrorMessage(null)
+    }
+  }, [isElectron, stopElectron])
+
+  // ── Language change: restart active recognition ──────────────
+  useEffect(() => {
+    if (!isElectron) {
+      // Web Speech: calling stop() triggers onend which restarts with new langRef
+      if (activeRef.current && recRef.current) {
+        try { recRef.current.stop() } catch { /* onend handles restart */ }
+      }
+    } else {
+      // Electron: swap recognizer without stopping mic
+      if (!activeRef.current) return
+      const eAPI = (window as Window).electronAPI!
+      elCompletedTextsRef.current = []
+      elPartialRef.current = ''
+      eAPI.speech.stop().then(() => {
+        if (!activeRef.current) return
+        return eAPI.speech.start(langRef.current)
+      }).then(result => {
+        if (!result || !activeRef.current) return
+        if (!result.ok) {
+          activeRef.current = false
+          setStatus('error')
+          setErrorMessage(result.error ?? 'Failed to restart recognizer')
+        }
+      }).catch(() => { /* ignore */ })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [language])
 
+  // ── Cleanup on unmount ───────────────────────────────────────
   useEffect(() => {
     return () => {
       clearTimeout(startTimeoutRef.current)
       activeRef.current = false
+      // Web Speech
       try { recRef.current?.abort() } catch { /* ignore */ }
+      // Electron
+      processorRef.current?.disconnect()
+      audioCtxRef.current?.close().catch(() => {})
+      micStreamRef.current?.getTracks().forEach(t => t.stop())
+      ;(window as Window).electronAPI?.speech.stop()
     }
   }, [])
 
-  return { status, transcript, targetRatio, language, setLanguage, start, stop, errorMessage }
+  return {
+    status,
+    transcript,
+    targetRatio,
+    language,
+    setLanguage,
+    start,
+    stop,
+    errorMessage,
+    engine: isElectron ? 'electron-offline' : 'browser',
+    modelPath,
+  }
 }

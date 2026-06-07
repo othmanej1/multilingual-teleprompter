@@ -1,5 +1,19 @@
 # TelePrompter — Release Notes
 
+## v1.1.0 (2026-06-07)
+
+### Phase 9 — Offline Speech Recognition
+- Electron desktop app now uses **sherpa-onnx-node** for fully offline speech recognition
+- Web Speech API (Chrome/Edge) is preserved unchanged in the browser version
+- Audio captured via Web Audio `ScriptProcessorNode` at 16 kHz; streamed to main process via IPC
+- `contextIsolation: true` and `nodeIntegration: false` preserved; bridge via preload `speech` object
+- Engine badge ("Offline") shown in Voice Tracking panel when running offline mode
+- Model-missing panel shows the exact directory path and links to `models/README.md`
+- Models directory: `models/{lang}/` in dev, `{userData}/models/{lang}/` in production
+- Supported model types: transducer (encoder/decoder/joiner) and Zipformer2 CTC
+- Language switch while active swaps the recognizer without restarting microphone
+- electron-builder config updated: sherpa-onnx-node bundled, DLLs in `asarUnpack`
+
 ## v1.0.0 (2026-06-07)
 
 ### Phase 8 — Production Branding Polish

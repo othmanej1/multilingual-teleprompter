@@ -34,4 +34,34 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openUserDataFolder(): void {
     ipcRenderer.send('app:openUserData')
   },
+
+  speech: {
+    check(lang: string): Promise<{ available: boolean; modelPath: string; missingFiles?: string[] }> {
+      return ipcRenderer.invoke('speech:check', lang)
+    },
+    getModelsBasePath(): Promise<string> {
+      return ipcRenderer.invoke('speech:getModelsBasePath')
+    },
+    start(lang: string): Promise<{ ok: boolean; error?: string }> {
+      return ipcRenderer.invoke('speech:start', lang)
+    },
+    stop(): Promise<void> {
+      return ipcRenderer.invoke('speech:stop')
+    },
+    sendAudio(samples: Float32Array): void {
+      ipcRenderer.send('speech:audio', samples)
+    },
+    onResult(callback: (data: { text: string; isFinal: boolean; segment: number }) => void): void {
+      ipcRenderer.on('speech:result', (_event, data) => callback(data))
+    },
+    offResult(): void {
+      ipcRenderer.removeAllListeners('speech:result')
+    },
+    onError(callback: (data: { message: string }) => void): void {
+      ipcRenderer.on('speech:error', (_event, data) => callback(data))
+    },
+    offError(): void {
+      ipcRenderer.removeAllListeners('speech:error')
+    },
+  },
 })

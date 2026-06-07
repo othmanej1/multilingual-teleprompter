@@ -10,6 +10,7 @@ import {
 } from 'electron'
 import { join } from 'path'
 import { readFileSync, writeFileSync } from 'fs'
+import { setupSpeechEngine } from './speech-engine'
 
 // ── Environment ───────────────────────────────────────────
 // !app.isPackaged is true when running via `electron .` in dev
@@ -365,6 +366,7 @@ function createMainWindow(): BrowserWindow {
 
 // ── App lifecycle ─────────────────────────────────────────
 app.whenReady().then(() => {
+  setupSpeechEngine(() => mainWindow)
   buildMenu()
   mainWindow = createMainWindow()
 

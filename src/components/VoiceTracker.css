@@ -217,6 +217,69 @@
   flex-shrink: 0;
 }
 
+/* ── Engine badge ────────────────────────────────────────── */
+.vt-engine-badge {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-ring);
+  border-radius: 4px;
+  padding: 1px 5px;
+  flex-shrink: 0;
+}
+
+/* ── Model missing panel ─────────────────────────────────── */
+.vt-model-missing {
+  background: rgba(245, 158, 11, 0.07);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: var(--r-md);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vt-model-missing-title {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--warning, #f59e0b);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.vt-model-missing-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.vt-model-missing-body p {
+  font-size: var(--text-xs);
+  color: var(--t2);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.vt-model-path {
+  font-family: 'Consolas', 'Menlo', monospace;
+  font-size: 10px;
+  color: var(--t1);
+  background: var(--bg-sunken);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-sm);
+  padding: 4px 6px;
+  word-break: break-all;
+  display: block;
+}
+
+.vt-model-hint {
+  font-size: var(--text-xs);
+  color: var(--t3);
+}
+
 /* ── Error / Warning ─────────────────────────────────────── */
 .vt-error {
   font-size: var(--text-xs);

@@ -13,6 +13,8 @@ interface Props {
   anchorPct: number
   zonePct: number
   autoCenter: boolean
+  engine: 'browser' | 'electron-offline'
+  modelPath: string | null
   onStart: () => void
   onStop: () => void
   onLanguageChange: (lang: string) => void
@@ -41,13 +43,15 @@ const STATUS_COLOR: Record<VoiceStatus, string> = {
 
 export const VoiceTracker = memo(function VoiceTracker({
   status, transcript, targetRatio, scrollRatio, language, errorMessage,
-  anchorPct, zonePct, autoCenter,
+  anchorPct, zonePct, autoCenter, engine, modelPath,
   onStart, onStop, onLanguageChange,
   onAnchorChange, onZoneChange, onAutoCenterChange,
 }: Props) {
   const isListening = status === 'listening'
   const isStarting = status === 'starting'
   const isUnsupported = status === 'unsupported'
+  const isModelMissing = engine === 'electron-offline' && status === 'error' && modelPath !== null
+    && (errorMessage?.includes('not found') ?? false)
 
   const voicePct = targetRatio !== null ? Math.round(targetRatio * 100) : null
   const scrollPct = Math.round(scrollRatio * 100)
@@ -57,6 +61,9 @@ export const VoiceTracker = memo(function VoiceTracker({
     <div className="vt-panel">
       <div className="vt-header">
         <span className="vt-title">Voice Tracking</span>
+        {engine === 'electron-offline' && (
+          <span className="vt-engine-badge">Offline</span>
+        )}
         <span
           className={`vt-status-dot${isListening ? ' listening' : ''}`}
           style={{ background: STATUS_COLOR[status] }}
@@ -166,7 +173,18 @@ export const VoiceTracker = memo(function VoiceTracker({
         </div>
       )}
 
-      {(errorMessage || status === 'denied') && (
+      {isModelMissing && modelPath ? (
+        <div className="vt-model-missing">
+          <div className="vt-model-missing-title">Speech model not installed</div>
+          <div className="vt-model-missing-body">
+            <p>Download a sherpa-onnx streaming model and extract it to:</p>
+            <code className="vt-model-path">{modelPath}</code>
+            <p className="vt-model-hint">
+              See <strong>models/README.md</strong> for download links and setup instructions.
+            </p>
+          </div>
+        </div>
+      ) : (errorMessage || status === 'denied') && (
         <div className="vt-error">{errorMessage ?? 'Microphone access denied'}</div>
       )}
 
