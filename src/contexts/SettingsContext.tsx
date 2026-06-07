@@ -26,7 +26,7 @@ export function SettingsProvider({
   const settingsRef = useRef(settings)
   settingsRef.current = settings // always current in async callbacks
 
-  const persistTimerRef = useRef<ReturnType<typeof setTimeout>>()
+  const persistTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const isInitialMount = useRef(true)
 
   // Debounced localStorage persistence (main window only)

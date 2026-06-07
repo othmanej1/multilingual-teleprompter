@@ -22,9 +22,25 @@ export const VOICE_LANGUAGES = [
   { value: 'ar-EG', label: 'Arabic (Egypt)' },
 ]
 
+// Web Speech API — not universally present in TypeScript DOM lib versions
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean
+  interimResults: boolean
+  lang: string
+  maxAlternatives: number
+  onend: ((this: SpeechRecognition, ev: Event) => unknown) | null
+  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => unknown) | null
+  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => unknown) | null
+  onstart: ((this: SpeechRecognition, ev: Event) => unknown) | null
+  abort(): void
+  start(): void
+  stop(): void
+}
+
 declare global {
   interface Window {
-    webkitSpeechRecognition: typeof SpeechRecognition
+    SpeechRecognition: (new () => SpeechRecognition) | undefined
+    webkitSpeechRecognition: (new () => SpeechRecognition) | undefined
   }
 }
 
@@ -78,7 +94,7 @@ export function useVoiceTracking(script: string): VoiceTrackingResult {
   const recRef = useRef<SpeechRecognition | null>(null)
   const activeRef = useRef(false)
   const isListeningRef = useRef(false)
-  const startTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
+  const startTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const langRef = useRef(language)
   const scriptWordsRef = useRef<string[]>([])
   const createAndStartRef = useRef<((isInitial?: boolean) => void) | null>(null)

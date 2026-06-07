@@ -8,7 +8,7 @@ export function loadScripts(): Script[] {
     const raw = localStorage.getItem(SCRIPTS_KEY)
     if (!raw) return []
     // Spread default first so existing fields win; adds notes:'' for pre-notes scripts
-    return (JSON.parse(raw) as Script[]).map(s => ({ notes: '', ...s }))
+    return (JSON.parse(raw) as Script[]).map(s => ({ ...s, notes: s.notes ?? '' }))
   } catch {
     return []
   }
