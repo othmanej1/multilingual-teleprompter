@@ -259,7 +259,7 @@ type SyncMessage =
 ### Phase 5 — Production Polish
 - [x] Keyboard shortcut reference overlay (`?` key or `?` button; `Esc`/backdrop to close; 3 sections: Playback / Navigation / Interface)
 - [x] `npm run build` passes clean (`tsc -b` + Vite bundle, 231 kB JS / 32 kB CSS); `vite preview` smoke-tested
-- Touch / tablet support (pinch-to-zoom font size, swipe to scroll)
+- [x] Touch / tablet support (swipe-to-scroll via `touch-action: pan-y`; pinch-to-zoom scales font size 16–96px, syncs to output window)
 - High-contrast accessibility mode
 - Print / PDF export of scripts
 

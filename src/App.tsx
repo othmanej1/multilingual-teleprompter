@@ -290,6 +290,54 @@ export default function App() {
     return () => el.removeEventListener('scroll', onScroll)
   }, []) // previewRef.current is stable after mount
 
+  // Pinch-to-zoom: two-finger pinch on the preview scales font size.
+  // fontSizeRef always holds the current value so touchstart sees it fresh.
+  const fontSizeRef = useRef(settings.fontSize)
+  fontSizeRef.current = settings.fontSize
+
+  useEffect(() => {
+    const el = previewRef.current
+    if (!el) return
+
+    let initDist = 0
+    let initFontSize = 0
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        initDist = Math.hypot(
+          e.touches[1].clientX - e.touches[0].clientX,
+          e.touches[1].clientY - e.touches[0].clientY,
+        )
+        initFontSize = fontSizeRef.current
+      }
+    }
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length !== 2 || initDist === 0) return
+      e.preventDefault() // block browser pinch-to-zoom on this element
+      const dist = Math.hypot(
+        e.touches[1].clientX - e.touches[0].clientX,
+        e.touches[1].clientY - e.touches[0].clientY,
+      )
+      const newSize = Math.round(Math.max(16, Math.min(96, initFontSize * (dist / initDist))))
+      update({ fontSize: newSize })
+    }
+
+    const onTouchEnd = () => { initDist = 0 }
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true })
+    el.addEventListener('touchmove', onTouchMove, { passive: false })
+    el.addEventListener('touchend', onTouchEnd, { passive: true })
+    el.addEventListener('touchcancel', onTouchEnd, { passive: true })
+
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart)
+      el.removeEventListener('touchmove', onTouchMove)
+      el.removeEventListener('touchend', onTouchEnd)
+      el.removeEventListener('touchcancel', onTouchEnd)
+    }
+  }, [update])
+
   // Save on browser close / refresh
   useEffect(() => {
     const save = () => saveScrollPosition(activeId, scrollRatioRef.current)

@@ -1110,6 +1110,7 @@
   padding: 64px 72px 60vh;
   scrollbar-width: none;
   transition: transform 0.2s ease;
+  touch-action: pan-y; /* allow swipe-scroll; pinch-zoom handled by JS */
 }
 .teleprompter::-webkit-scrollbar { display: none; }
 
