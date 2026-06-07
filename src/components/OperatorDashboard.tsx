@@ -8,10 +8,12 @@ interface Props {
   speed: number
   outputConnected: boolean
   cueCount: number
+  popupBlocked: boolean
   onPlayPause: () => void
   onJump: (secs: number) => void
   onSpeedChange: (v: number) => void
   onOpenOutput: () => void
+  onDismissPopupBlocked: () => void
   onJumpToCue: (dir: 'prev' | 'next') => void
 }
 
@@ -32,7 +34,8 @@ function timeRemaining(wordsLeft: number, speed: number) {
 
 export const OperatorDashboard = memo(function OperatorDashboard({
   isPlaying, scrollRatio, totalWords, speed,
-  outputConnected, cueCount, onPlayPause, onJump, onSpeedChange, onOpenOutput, onJumpToCue,
+  outputConnected, cueCount, popupBlocked,
+  onPlayPause, onJump, onSpeedChange, onOpenOutput, onDismissPopupBlocked, onJumpToCue,
 }: Props) {
   const pct = Math.round(scrollRatio * 100)
   const wordsLeft = wordsRemaining(scrollRatio, totalWords)
@@ -51,6 +54,19 @@ export const OperatorDashboard = memo(function OperatorDashboard({
           {outputConnected ? 'Output: Live' : 'Open Output'}
         </button>
       </div>
+
+      {/* Popup blocked notice */}
+      {popupBlocked && (
+        <div className="op-popup-blocked" role="alert">
+          <span>Popup blocked — allow popups for this site to open the output window.</span>
+          <button className="op-popup-dismiss" onClick={onDismissPopupBlocked} aria-label="Dismiss">✕</button>
+        </div>
+      )}
+
+      {/* Web browser note: second-monitor tip */}
+      {!outputConnected && !window.electronAPI && (
+        <p className="op-web-note">Tip: use the desktop app to send the output to a second monitor.</p>
+      )}
 
       {/* Progress bar */}
       <div className="op-progress-wrap" title={`${pct}% complete`}>

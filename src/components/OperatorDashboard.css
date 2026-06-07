@@ -254,3 +254,43 @@
   font-variant-numeric: tabular-nums;
   font-weight: 500;
 }
+
+/* ── Popup blocked notice ───────────────────────────────── */
+.op-popup-blocked {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  border-radius: var(--r-md);
+  padding: 8px 10px;
+  font-size: var(--text-xs);
+  color: var(--warning, #f59e0b);
+  line-height: 1.5;
+}
+
+.op-popup-blocked span { flex: 1; }
+
+.op-popup-dismiss {
+  background: none;
+  border: none;
+  color: var(--t3);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.op-popup-dismiss:hover { color: var(--t1); }
+
+/* ── Web browser hint ───────────────────────────────────── */
+.op-web-note {
+  font-size: var(--text-xs);
+  color: var(--t4);
+  line-height: 1.5;
+  margin: 0;
+  padding: 6px 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-sm);
+}

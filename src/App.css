@@ -1587,3 +1587,13 @@ kbd {
 .about-open-btn:hover {
   background: rgba(134, 188, 37, 0.18);
 }
+
+.about-browser-note {
+  font-size: var(--text-xs);
+  color: var(--t4);
+  margin: 4px 0 0;
+  padding: 5px 10px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-sm);
+}

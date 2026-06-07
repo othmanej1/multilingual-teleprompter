@@ -114,6 +114,7 @@ export default function App() {
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [aboutOpen, setAboutOpen] = useState(false)
   const [userDataPath, setUserDataPath] = useState('')
+  const [popupBlocked, setPopupBlocked] = useState(false)
   const [playlistOpen, setPlaylistOpen] = useState(false)
   const [versionOpen, setVersionOpen] = useState(false)
   const [activePlaylistId, setActivePlaylistId] = useState<string | null>(null)
@@ -307,6 +308,7 @@ export default function App() {
       'popup,width=1280,height=720',
     )
     if (win) {
+      setPopupBlocked(false)
       outputWindowRef.current = win
       setOutputConnected(false)
       const poll = setInterval(() => {
@@ -316,6 +318,9 @@ export default function App() {
           outputWindowRef.current = null
         }
       }, 1000)
+    } else {
+      // Browser popup blocker prevented the window from opening
+      setPopupBlocked(true)
     }
   }, [])
 
@@ -755,13 +760,14 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [jumpToCue])
 
-  // ── Shortcuts / About overlay: ? to toggle, Escape to close ──
+  // ── Shortcuts / About overlay: ? / Ctrl+/ to toggle, Escape to close ──
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { setShortcutsOpen(false); setAboutOpen(false); return }
       const tag = (e.target as HTMLElement).tagName
       if (tag === 'TEXTAREA' || tag === 'INPUT' || tag === 'SELECT') return
       if (e.key === '?') { e.preventDefault(); setShortcutsOpen(o => !o) }
+      if ((e.ctrlKey || e.metaKey) && e.key === '/') { e.preventDefault(); setShortcutsOpen(o => !o) }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -854,6 +860,27 @@ export default function App() {
     api.onMenuAction(action => menuHandlerRef.current(action))
     return () => api.offMenuAction()
   }, []) // Register once; the ref always holds the latest handlers
+
+  // ── App-level keyboard shortcuts (mirror native menu accelerators) ────────
+  // Active in the browser where no native menu exists.
+  // In Electron the accelerator is consumed by the native menu before it
+  // reaches the renderer, so there is no double-invoke risk.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey)) return
+      const tag = (e.target as HTMLElement).tagName
+      if (tag === 'TEXTAREA' || tag === 'INPUT' || tag === 'SELECT') return
+      if (!e.shiftKey) {
+        if (e.key === 'n' || e.key === 'N') { e.preventDefault(); createNewScript() }
+        if (e.key === 'l' || e.key === 'L') { e.preventDefault(); setLibraryOpen(o => !o) }
+      } else {
+        if (e.key === 'A' || e.key === 'a') { e.preventDefault(); setSettingsOpen(o => !o) }
+        if (e.key === 'F' || e.key === 'f') { e.preventDefault(); handleFocusMode() }
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [createNewScript, handleFocusMode])
 
   // ── Progress readout ───────────────────────────────────
   const pct = Math.round(scrollRatio * 100)
@@ -1398,10 +1425,12 @@ export default function App() {
             speed={speed}
             outputConnected={outputConnected}
             cueCount={cueCount}
+            popupBlocked={popupBlocked}
             onPlayPause={handlePlayPress}
             onJump={jumpBy}
             onSpeedChange={setSpeed}
             onOpenOutput={openOutputWindow}
+            onDismissPopupBlocked={() => setPopupBlocked(false)}
             onJumpToCue={jumpToCue}
           />
         )}
@@ -1492,6 +1521,9 @@ export default function App() {
                   </button>
                 </div>
               )}
+              {!window.electronAPI && (
+                <p className="about-browser-note">Running in browser · Data stored in localStorage</p>
+              )}
             </div>
 
             <p className="shortcuts-footer">© 2025 – 2026</p>
@@ -1526,7 +1558,11 @@ export default function App() {
               <div className="shortcuts-section">
                 <span className="shortcuts-section-label">Interface</span>
                 <dl className="shortcuts-list">
-                  <dt><kbd>?</kbd></dt><dd>Show / hide shortcuts</dd>
+                  <dt><kbd>?</kbd> / <kbd>Ctrl+/</kbd></dt><dd>Show / hide shortcuts</dd>
+                  <dt><kbd>Ctrl+N</kbd></dt><dd>New script</dd>
+                  <dt><kbd>Ctrl+L</kbd></dt><dd>Toggle script library</dd>
+                  <dt><kbd>Ctrl+Shift+A</kbd></dt><dd>Toggle appearance panel</dd>
+                  <dt><kbd>Ctrl+Shift+F</kbd></dt><dd>Toggle focus mode</dd>
                   <dt><kbd>Esc</kbd></dt><dd>Close this overlay</dd>
                 </dl>
               </div>
