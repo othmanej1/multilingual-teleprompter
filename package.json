@@ -1,7 +1,7 @@
 {
   "name": "teleprompter-app",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",
@@ -10,7 +10,40 @@
     "preview": "vite preview",
     "electron:compile": "tsc -p tsconfig.electron.json",
     "electron:dev": "npm run electron:compile && concurrently -k -n Vite,TSC,Electron --prefix-colors cyan,yellow,green \"vite --port 5173\" \"tsc -p tsconfig.electron.json --watch --preserveWatchOutput\" \"wait-on http://localhost:5173 && electron .\"",
-    "electron:build": "npm run build && npm run electron:compile"
+    "electron:build": "npm run build && npm run electron:compile",
+    "dist:win": "npm run electron:build && electron-builder build --win --x64"
+  },
+  "build": {
+    "appId": "com.teleprompter.multilingual",
+    "productName": "TelePrompter",
+    "copyright": "Copyright © 2025",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "package.json",
+      "!node_modules/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "TelePrompter"
+    }
   },
   "dependencies": {
     "react": "^19.2.6",
@@ -24,6 +57,7 @@
     "@vitejs/plugin-react": "^6.0.1",
     "concurrently": "^10.0.3",
     "electron": "^42.3.3",
+    "electron-builder": "^26.15.0",
     "eslint": "^10.3.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
