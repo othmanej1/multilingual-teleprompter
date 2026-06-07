@@ -118,7 +118,7 @@ export default function App() {
   const [playlistIdx, setPlaylistIdx] = useState(0)
   const [voiceAnchorPct, setVoiceAnchorPct] = useState(() => {
     const v = parseInt(localStorage.getItem(LS_VOICE_ANCHOR) ?? '', 10)
-    return isNaN(v) ? 50 : Math.max(30, Math.min(70, v))
+    return isNaN(v) ? 45 : Math.max(30, Math.min(70, v))
   })
   const [voiceZonePct, setVoiceZonePct] = useState(() => {
     const v = parseInt(localStorage.getItem(LS_VOICE_ZONE) ?? '', 10)
@@ -157,9 +157,12 @@ export default function App() {
   const voiceGraceUntilRef  = useRef(0)
   const scriptRef           = useRef('')
 
-  const appRef     = useRef<HTMLDivElement>(null)
-  const previewRef = useRef<HTMLDivElement>(null)
-  const rafRef     = useRef<number>(0)
+  const appRef        = useRef<HTMLDivElement>(null)
+  const previewRef    = useRef<HTMLDivElement>(null)
+  const textRef       = useRef<HTMLDivElement>(null)
+  const rafRef        = useRef<number>(0)
+  const contentTopRef = useRef(64)  // padding-top of .teleprompter (px), cached by ResizeObserver
+  const textHeightRef = useRef(0)   // .tp-text offsetHeight, updated by ResizeObserver
   const lastTimeRef = useRef<number | null>(null)
 
   const autoPlayRef         = useRef(false)
@@ -168,7 +171,7 @@ export default function App() {
   const playlistsRef        = useRef<Playlist[]>([])
   const playlistIdxRef      = useRef(0)
   const activeScriptRef     = useRef<Script | undefined>(undefined)
-  const voiceAnchorPctRef   = useRef(50)
+  const voiceAnchorPctRef   = useRef(45)
   const voiceZonePctRef     = useRef(10)
   const voiceAutoCenterRef  = useRef(true)
 
@@ -241,6 +244,23 @@ export default function App() {
   useEffect(() => { localStorage.setItem(LS_VOICE_ANCHOR, String(voiceAnchorPct)) }, [voiceAnchorPct])
   useEffect(() => { localStorage.setItem(LS_VOICE_ZONE, String(voiceZonePct)) }, [voiceZonePct])
   useEffect(() => { localStorage.setItem(LS_VOICE_AUTOCTR, String(voiceAutoCenter)) }, [voiceAutoCenter])
+
+  // ── Content metrics for accurate voice anchor formula ──
+  // Caches .teleprompter padding-top and .tp-text height to avoid reflow in the RAF loop.
+  // ResizeObserver fires on font/content/window-size changes that alter text height.
+  useEffect(() => {
+    const el = previewRef.current
+    const textEl = textRef.current
+    if (!el || !textEl) return
+    contentTopRef.current = parseFloat(getComputedStyle(el).paddingTop) || 64
+    textHeightRef.current = textEl.offsetHeight
+    const ro = new ResizeObserver(() => {
+      textHeightRef.current = textRef.current?.offsetHeight ?? 0
+    })
+    ro.observe(textEl)
+    return () => ro.disconnect()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // ── BroadcastChannel ───────────────────────────────────
   const sendSync = useSyncChannel(useCallback((msg: SyncMessage) => {
@@ -561,10 +581,15 @@ export default function App() {
         const maxScroll = el.scrollHeight - el.clientHeight
         const vtRatio = voiceTargetRatioRef.current
         if (voiceEnabledRef.current && vtRatio !== null && maxScroll > 0 && ts > voiceGraceUntilRef.current && voiceAutoCenterRef.current) {
-          // Position matched word at anchor (not top edge): anchor formula
+          // Compute word pixel position within the scroll container using cached content metrics.
+          // contentTopRef = padding-top of .teleprompter (64px); textHeightRef = .tp-text height.
+          // This avoids the scrollHeight approximation that over-shoots for vtRatio > 0.6
+          // because scrollHeight includes 64px top padding + 60vh bottom padding with no words.
           const anchorFraction = voiceAnchorPctRef.current / 100
+          const textH = textHeightRef.current > 0 ? textHeightRef.current : el.scrollHeight
+          const wordPixelPos = contentTopRef.current + vtRatio * textH
           const targetScrollTop = Math.max(0, Math.min(maxScroll,
-            vtRatio * (maxScroll + el.clientHeight) - anchorFraction * el.clientHeight
+            wordPixelPos - anchorFraction * el.clientHeight
           ))
           // Reading zone: only correct when text has drifted outside the zone
           const zoneHalf = (voiceZonePctRef.current / 100) * el.clientHeight
@@ -1298,6 +1323,7 @@ export default function App() {
               }}
             >
               <div
+                ref={textRef}
                 className="tp-text"
                 dir={settings.direction}
                 style={{
