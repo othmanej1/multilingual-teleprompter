@@ -2,6 +2,7 @@ export interface Script {
   id: string
   title: string
   content: string
+  notes: string    // operator-only; never sent to the output window
   createdAt: number // Unix ms
   updatedAt: number // Unix ms
 }

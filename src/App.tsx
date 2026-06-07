@@ -53,6 +53,7 @@ function fmtDate(ts: number): string {
 const LS_EDITOR_WIDTH     = 'tp_editor_width'
 const LS_EDITOR_COLLAPSED = 'tp_editor_collapsed'
 const LS_FOCUS_MODE       = 'tp_focus_mode'
+const LS_NOTES_OPEN       = 'tp_notes_open'
 
 const EDITOR_MIN_W = 280
 const EDITOR_MAX_W = 720
@@ -111,6 +112,9 @@ export default function App() {
   )
   const [focusMode, setFocusMode] = useState(
     () => localStorage.getItem(LS_FOCUS_MODE) === 'true',
+  )
+  const [notesOpen, setNotesOpen] = useState(
+    () => localStorage.getItem(LS_NOTES_OPEN) === 'true',
   )
   const [isDragging, setIsDragging] = useState(false)
 
@@ -173,6 +177,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem(LS_FOCUS_MODE, String(focusMode))
   }, [focusMode])
+
+  useEffect(() => {
+    localStorage.setItem(LS_NOTES_OPEN, String(notesOpen))
+  }, [notesOpen])
 
   // ── BroadcastChannel ───────────────────────────────────
   const sendSync = useSyncChannel(useCallback((msg: SyncMessage) => {
@@ -926,6 +934,14 @@ export default function App() {
                   ↑ MD
                 </button>
                 <button
+                  className={`btn-tool btn-notes-toggle${notesOpen ? ' active' : ''}`}
+                  onClick={() => setNotesOpen(o => !o)}
+                  title="Presenter notes — operator only, not sent to output"
+                >
+                  ✎ Notes
+                  {activeScript?.notes && !notesOpen && <span className="notes-indicator" />}
+                </button>
+                <button
                   className="btn-tool editor-collapse-btn"
                   onClick={() => setEditorCollapsed(true)}
                   title="Collapse panel"
@@ -955,6 +971,23 @@ export default function App() {
                   </>
                 )}
               </div>
+
+              {notesOpen && (
+                <div className="notes-panel">
+                  <div className="notes-header">
+                    <span className="notes-label">Presenter Notes</span>
+                    <span className="notes-badge">operator only · not sent to output</span>
+                  </div>
+                  <textarea
+                    className="notes-editor"
+                    value={activeScript?.notes ?? ''}
+                    onChange={e => patchScript(activeId, { notes: e.target.value })}
+                    placeholder="Notes visible to the operator only — cues, reminders, timing…"
+                    spellCheck
+                    tabIndex={editorCollapsed ? -1 : 0}
+                  />
+                </div>
+              )}
             </div>
           </section>
         )}

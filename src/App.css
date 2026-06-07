@@ -981,6 +981,81 @@
 
 .stats-dot { color: var(--border-dim); }
 
+/* ── Presenter notes panel ──────────────────────────────── */
+.notes-panel {
+  flex-shrink: 0;
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  border-top: 2px solid var(--border-dim);
+  background: var(--bg-sunken);
+}
+
+.notes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 14px;
+  min-height: 30px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.notes-label {
+  font-size: var(--text-2xs);
+  font-weight: var(--fw-bold);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--t3);
+}
+
+.notes-badge {
+  font-size: var(--text-2xs);
+  color: var(--t4);
+  background: var(--bg-control);
+  border: 1px solid var(--border-dim);
+  border-radius: 999px;
+  padding: 1px 7px;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.notes-editor {
+  flex: 1;
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg-sunken);
+  color: var(--t2);
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  line-height: 1.75;
+  letter-spacing: 0.15px;
+}
+.notes-editor::placeholder { color: var(--t4); }
+
+/* Notes button active state */
+.btn-notes-toggle.active {
+  background: var(--bg-control);
+  color: var(--t2);
+  border-color: var(--border-hi);
+}
+
+/* Green dot when notes have content but panel is closed */
+.notes-indicator {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-left: 5px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
 /* ── Preview panel ──────────────────────────────────────── */
 .preview-panel { flex: 1; }
 

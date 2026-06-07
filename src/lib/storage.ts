@@ -6,7 +6,9 @@ const ACTIVE_KEY = 'tp_active'
 export function loadScripts(): Script[] {
   try {
     const raw = localStorage.getItem(SCRIPTS_KEY)
-    return raw ? (JSON.parse(raw) as Script[]) : []
+    if (!raw) return []
+    // Spread default first so existing fields win; adds notes:'' for pre-notes scripts
+    return (JSON.parse(raw) as Script[]).map(s => ({ notes: '', ...s }))
   } catch {
     return []
   }
@@ -38,6 +40,7 @@ export function makeScript(title = 'Untitled Script', content = ''): Script {
     id: `s_${now}_${Math.random().toString(36).slice(2, 6)}`,
     title,
     content,
+    notes: '',
     createdAt: now,
     updatedAt: now,
   }
