@@ -250,7 +250,7 @@ type SyncMessage =
 ## Pending Roadmap (not started)
 
 ### Phase 5A — Presenter Experience
-- Cue markers (insert `[CUE]` tags in script, jump between them)
+- [x] Cue markers (`[CUE]` tags in script, styled inline as `▸ CUE` badges; `◀ Cue` / `Cue ▶` buttons in transport group and Operator Dashboard; `[` / `]` keyboard shortcuts; rendered in output window too)
 - Presenter notes panel (separate from displayed text, visible to operator only)
 - Script position memory (restore scroll position per script between sessions)
 - Font size presets (Quick 1-click size switching: Small / Medium / Large / XL)

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { useSyncChannel } from '../hooks/useSyncChannel'
 import { useSettings } from '../contexts/SettingsContext'
 import { fontFamilyCss } from '../lib/settings'
+import { renderScript } from '../lib/cues'
 import type { SyncMessage } from '../lib/types'
 import './OutputView.css'
 
@@ -67,7 +68,7 @@ export function OutputView() {
             textAlign: settings.textAlign,
           }}
         >
-          {script}
+          {renderScript(script)}
         </div>
       </div>
     </div>

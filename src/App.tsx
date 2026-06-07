@@ -7,6 +7,7 @@ import { useSyncChannel } from './hooks/useSyncChannel'
 import { useVoiceTracking } from './hooks/useVoiceTracking'
 import { useSettings } from './contexts/SettingsContext'
 import { FONT_FAMILY_OPTIONS, fontFamilyCss } from './lib/settings'
+import { renderScript, countCues } from './lib/cues'
 import {
   loadScripts, persistScripts, loadActiveId, persistActiveId, makeScript,
 } from './lib/storage'
@@ -152,6 +153,8 @@ export default function App() {
     return { words, chars, duration: mins > 0 ? `${mins}m ${secs}s` : `${secs}s`, totalSecs }
   }, [script])
 
+  const cueCount = useMemo(() => countCues(script), [script])
+
   // ── Voice tracking ─────────────────────────────────────
   const voice = useVoiceTracking(script)
   const voiceActive = voice.status === 'listening'
@@ -198,8 +201,12 @@ export default function App() {
       outputWindowRef.current.focus()
       return
     }
+    // Strip any existing query/hash so the URL is always clean.
+    // window.location.href works for both http:// (dev) and
+    // file:// (Electron production) — origin alone is "null" for file://.
+    const base = window.location.href.replace(/[?#].*$/, '')
     const win = window.open(
-      `${window.location.origin}${window.location.pathname}?output=1`,
+      `${base}?output=1`,
       'tp_output',
       'popup,width=1280,height=720',
     )
@@ -448,6 +455,51 @@ export default function App() {
     if (outputConnected) sendSyncRef.current({ type: 'seek', ratio: 0 })
   }, [outputConnected])
 
+  // ── Cue navigation ────────────────────────────────────
+  const jumpToCue = useCallback((direction: 'prev' | 'next') => {
+    const el = previewRef.current
+    if (!el) return
+    const cueEls = Array.from(el.querySelectorAll<HTMLElement>('.tp-cue'))
+    if (cueEls.length === 0) return
+
+    voiceGraceUntilRef.current = performance.now() + 2000
+    const elRect = el.getBoundingClientRect()
+    // Compute each cue's position within the scrollable container
+    const cueScrollTops = cueEls.map(c =>
+      c.getBoundingClientRect().top - elRect.top + el.scrollTop
+    )
+    const maxScroll = el.scrollHeight - el.clientHeight
+    if (maxScroll <= 0) return
+
+    let target: number | undefined
+    if (direction === 'next') {
+      target = cueScrollTops.find(t => t > el.scrollTop + 20)
+    } else {
+      const prev = cueScrollTops.filter(t => t < el.scrollTop - 20)
+      target = prev[prev.length - 1]
+    }
+    if (target === undefined) return
+
+    const clipped = Math.max(0, Math.min(target, maxScroll))
+    const ratio = clipped / maxScroll
+    el.scrollTop = clipped
+    scrollRatioRef.current = ratio
+    setScrollRatio(ratio)
+    if (outputConnected) sendSyncRef.current({ type: 'seek', ratio })
+  }, [outputConnected])
+
+  // ── Cue keyboard shortcuts ────────────────────────────
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName
+      if (tag === 'TEXTAREA' || tag === 'INPUT' || tag === 'SELECT') return
+      if (e.key === '[') { e.preventDefault(); jumpToCue('prev') }
+      if (e.key === ']') { e.preventDefault(); jumpToCue('next') }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [jumpToCue])
+
   // ── Title inline editing ───────────────────────────────
   const startTitleEdit = () => {
     setDraftTitle(activeScript?.title ?? '')
@@ -494,6 +546,39 @@ export default function App() {
   }, [])
 
   const isActive = isPlaying || countdownActive
+
+  // ── Electron: notify main process of presenting state ──
+  // This enables the close-while-presenting confirmation dialog.
+  // No-op in browser (window.electronAPI is undefined).
+  useEffect(() => {
+    window.electronAPI?.setPresentingState(isActive)
+  }, [isActive])
+
+  // ── Electron: native menu → renderer action bridge ─────
+  // A ref holds the latest handlers so the IPC listener (registered once
+  // on mount) always calls the current callback without stale closures.
+  const menuHandlerRef = useRef<(action: string) => void>(() => {})
+  // Update ref every render so the IPC listener always calls the latest handlers
+  menuHandlerRef.current = (action: string) => {
+    switch (action) {
+      case 'new-script':         createNewScript(); break
+      case 'toggle-library':     setLibraryOpen(o => !o); break
+      case 'play-pause':         handlePlayPress(); break
+      case 'reset':              handleReset(); break
+      case 'focus-mode':         handleFocusMode(); break
+      case 'toggle-appearance':  setSettingsOpen(o => !o); break
+      case 'open-output':        openOutputWindow(); break
+      case 'prev-cue':           jumpToCue('prev'); break
+      case 'next-cue':           jumpToCue('next'); break
+    }
+  }
+
+  useEffect(() => {
+    const api = window.electronAPI
+    if (!api) return
+    api.onMenuAction(action => menuHandlerRef.current(action))
+    return () => api.offMenuAction()
+  }, []) // Register once; the ref always holds the latest handlers
 
   // ── Progress readout ───────────────────────────────────
   const pct = Math.round(scrollRatio * 100)
@@ -596,6 +681,11 @@ export default function App() {
             <button className="btn-transport" onClick={handleReset} title="Reset to top">⏮</button>
             <button className="btn-transport" onClick={() => jumpBy(-5)} title="−5 seconds">−5s</button>
             <button className="btn-transport" onClick={() => jumpBy(5)} title="+5 seconds">+5s</button>
+            {cueCount > 0 && <>
+              <div className="sep" />
+              <button className="btn-transport" onClick={() => jumpToCue('prev')} title="Previous cue  [">◀ Cue</button>
+              <button className="btn-transport" onClick={() => jumpToCue('next')} title="Next cue  ]">Cue ▶</button>
+            </>}
           </div>
 
           <div className="sep" />
@@ -911,7 +1001,7 @@ export default function App() {
                   textAlign: settings.textAlign,
                 }}
               >
-                {script || 'Your script will appear here…'}
+                {script ? renderScript(script) : 'Your script will appear here…'}
               </div>
             </div>
 
@@ -940,10 +1030,12 @@ export default function App() {
             totalWords={stats.words}
             speed={speed}
             outputConnected={outputConnected}
+            cueCount={cueCount}
             onPlayPause={handlePlayPress}
             onJump={jumpBy}
             onSpeedChange={setSpeed}
             onOpenOutput={openOutputWindow}
+            onJumpToCue={jumpToCue}
           />
         )}
 

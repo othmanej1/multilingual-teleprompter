@@ -179,6 +179,27 @@
 }
 .op-jump:hover { background: var(--bg-hover); color: var(--t1); border-color: var(--border-hi); }
 
+/* ── Cue navigation ─────────────────────────────────────── */
+.op-cue-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.op-cue-label {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--t3);
+  white-space: nowrap;
+}
+
+.op-cue-btns {
+  display: flex;
+  gap: 4px;
+}
+
 /* ── Speed ──────────────────────────────────────────────── */
 .op-speed-row {
   display: flex;

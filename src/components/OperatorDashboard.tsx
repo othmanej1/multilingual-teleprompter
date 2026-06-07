@@ -7,10 +7,12 @@ interface Props {
   totalWords: number
   speed: number
   outputConnected: boolean
+  cueCount: number
   onPlayPause: () => void
   onJump: (secs: number) => void
   onSpeedChange: (v: number) => void
   onOpenOutput: () => void
+  onJumpToCue: (dir: 'prev' | 'next') => void
 }
 
 function wordsRemaining(ratio: number, total: number) {
@@ -30,7 +32,7 @@ function timeRemaining(wordsLeft: number, speed: number) {
 
 export const OperatorDashboard = memo(function OperatorDashboard({
   isPlaying, scrollRatio, totalWords, speed,
-  outputConnected, onPlayPause, onJump, onSpeedChange, onOpenOutput,
+  outputConnected, cueCount, onPlayPause, onJump, onSpeedChange, onOpenOutput, onJumpToCue,
 }: Props) {
   const pct = Math.round(scrollRatio * 100)
   const wordsLeft = wordsRemaining(scrollRatio, totalWords)
@@ -86,6 +88,17 @@ export const OperatorDashboard = memo(function OperatorDashboard({
         <button className="op-jump" onClick={() => onJump(5)} title="Forward 5s">5»</button>
         <button className="op-jump" onClick={() => onJump(10)} title="Forward 10s">10»</button>
       </div>
+
+      {/* Cue navigation — only shown when script contains [CUE] markers */}
+      {cueCount > 0 && (
+        <div className="op-cue-row">
+          <span className="op-cue-label">Cues · {cueCount}</span>
+          <div className="op-cue-btns">
+            <button className="op-jump" onClick={() => onJumpToCue('prev')} title="Previous cue  [">◀ Prev</button>
+            <button className="op-jump" onClick={() => onJumpToCue('next')} title="Next cue  ]">Next ▶</button>
+          </div>
+        </div>
+      )}
 
       {/* Speed slider */}
       <div className="op-speed-row">
