@@ -102,7 +102,9 @@ export function useVoiceTracking(script: string): VoiceTrackingResult {
   const langRef = useRef(language)
   const scriptWordsRef = useRef<string[]>([])
 
-  langRef.current = language
+  useEffect(() => {
+    langRef.current = language
+  }, [language])
 
   useEffect(() => {
     scriptWordsRef.current = normalizeWords(script)
@@ -202,7 +204,9 @@ export function useVoiceTracking(script: string): VoiceTrackingResult {
     }
   }, [SpeechRec])
 
-  createAndStartRef.current = createAndStart
+  useEffect(() => {
+    createAndStartRef.current = createAndStart
+  }, [createAndStart])
 
   // ── Electron offline implementation ─────────────────────────
   const stopElectronAudio = useCallback(() => {
@@ -324,9 +328,7 @@ export function useVoiceTracking(script: string): VoiceTrackingResult {
       eAPI.speech.offResult()
       eAPI.speech.offError()
     }
-  // isElectron is stable for the component's lifetime
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [isElectron])
 
   // ── Combined start / stop ────────────────────────────────────
   const start = useCallback(() => {
