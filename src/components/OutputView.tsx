@@ -11,13 +11,13 @@ export function OutputView() {
   const [script, setScript] = useState('')
   const [connected, setConnected] = useState(false)
   const [voiceRatio, setVoiceRatio] = useState<number | null>(null)
-  const scriptRef = useRef('')
   const scrollRef = useRef<HTMLDivElement>(null)
   const rafRef = useRef<number>(0)
 
-  scriptRef.current = script
+  const sendRef = useRef<(msg: SyncMessage) => void>(() => {})
 
-  function applyRatio(ratio: number) {
+
+  const applyRatio = useCallback((ratio: number) => {
     cancelAnimationFrame(rafRef.current)
     rafRef.current = requestAnimationFrame(() => {
       const el = scrollRef.current
@@ -25,7 +25,7 @@ export function OutputView() {
       const maxScroll = el.scrollHeight - el.clientHeight
       if (maxScroll > 0) el.scrollTop = ratio * maxScroll
     })
-  }
+  }, [])
 
   const send = useSyncChannel(useCallback((msg: SyncMessage) => {
     if (msg.type === 'script') {
@@ -36,18 +36,20 @@ export function OutputView() {
     } else if (msg.type === 'voice-pos') {
       setVoiceRatio(msg.ratio)
     } else if (msg.type === 'ping') {
-      send({ type: 'pong' })
+      sendRef.current({ type: 'pong' })
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []))
+  }, [applyRatio]))
+
+  useEffect(() => {
+    sendRef.current = send
+  }, [send])
 
   // Announce presence and request fullscreen on mount
   useEffect(() => {
     send({ type: 'pong' })
     document.documentElement.requestFullscreen?.().catch(() => {})
     return () => cancelAnimationFrame(rafRef.current)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [send])
 
   return (
     <div className="output-root" style={{ backgroundColor: settings.bgColor }}>
