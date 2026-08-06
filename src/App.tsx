@@ -723,20 +723,30 @@ export default function App() {
     if (cueEls.length === 0) return
 
     voiceGraceUntilRef.current = performance.now() + 2000
-    const elRect = el.getBoundingClientRect()
-    // Compute each cue's position within the scrollable container
-    const cueScrollTops = cueEls.map(c =>
-      c.getBoundingClientRect().top - elRect.top + el.scrollTop
-    )
     const maxScroll = el.scrollHeight - el.clientHeight
     if (maxScroll <= 0) return
 
     let target: number | undefined
+    const elRect = el.getBoundingClientRect()
+
     if (direction === 'next') {
-      target = cueScrollTops.find(t => t > el.scrollTop + 20)
+      const threshold = el.scrollTop + 20
+      for (let i = 0; i < cueEls.length; i++) {
+        const top = cueEls[i].getBoundingClientRect().top - elRect.top + el.scrollTop
+        if (top > threshold) {
+          target = top
+          break
+        }
+      }
     } else {
-      const prev = cueScrollTops.filter(t => t < el.scrollTop - 20)
-      target = prev[prev.length - 1]
+      const threshold = el.scrollTop - 20
+      for (let i = cueEls.length - 1; i >= 0; i--) {
+        const top = cueEls[i].getBoundingClientRect().top - elRect.top + el.scrollTop
+        if (top < threshold) {
+          target = top
+          break
+        }
+      }
     }
     if (target === undefined) return
 
