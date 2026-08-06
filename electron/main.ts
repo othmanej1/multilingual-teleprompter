@@ -2,7 +2,7 @@ import {
   app,
   BrowserWindow,
   Menu,
-  MenuItem,
+
   dialog,
   ipcMain,
   shell,
@@ -260,7 +260,14 @@ function registerOutputWindowHandler(win: BrowserWindow): void {
     }
 
     // Any other external URL → open in system browser, deny in app
-    shell.openExternal(url)
+    try {
+      const parsedUrl = new URL(url)
+      if (['http:', 'https:'].includes(parsedUrl.protocol)) {
+        shell.openExternal(url).catch(() => {})
+      }
+    } catch {
+      // Ignore invalid URLs
+    }
     return { action: 'deny' }
   })
 }
