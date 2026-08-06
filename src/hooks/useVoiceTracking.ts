@@ -154,10 +154,11 @@ export function useVoiceTracking(script: string): VoiceTrackingResult {
     }
 
     rec.onresult = (e: SpeechRecognitionEvent) => {
-      let accumulated = ''
+      const parts = new Array(e.results.length)
       for (let i = 0; i < e.results.length; i++) {
-        accumulated += e.results[i][0].transcript + ' '
+        parts[i] = e.results[i][0].transcript
       }
+      const accumulated = parts.join(' ') + ' '
       const words = normalizeWords(accumulated)
       const recent = words.slice(-200)
       setTranscript(recent.slice(-15).join(' '))
