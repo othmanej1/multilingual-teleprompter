@@ -155,6 +155,7 @@ export const ScriptLibrary = memo(function ScriptLibrary({
             ref={editRef}
             className="lib-rename"
             value={editingTitle}
+            aria-label="Rename script title"
             onChange={e => setEditingTitle(e.target.value)}
             onBlur={commitRename}
             onKeyDown={e => {
@@ -184,6 +185,7 @@ export const ScriptLibrary = memo(function ScriptLibrary({
         <div className="lib-move-wrap" onClick={e => e.stopPropagation()}>
           <select
             className="lib-move-select"
+            aria-label="Select destination folder"
             defaultValue={s.folderId ?? ''}
             onChange={e => {
               onMoveToFolder(s.id, e.target.value || null)
@@ -197,6 +199,7 @@ export const ScriptLibrary = memo(function ScriptLibrary({
           </select>
           <button
             className="lib-move-cancel"
+            aria-label="Cancel moving script"
             onClick={() => setMovingScriptId(null)}
           >✕</button>
         </div>
@@ -205,21 +208,23 @@ export const ScriptLibrary = memo(function ScriptLibrary({
           <span>Delete?</span>
           <button
             className="lib-confirm-yes"
+            aria-label={`Confirm deletion of ${s.title}`}
             onClick={() => { onDelete(s.id); setConfirmDeleteId(null) }}
           >Yes</button>
           <button
             className="lib-confirm-no"
+            aria-label="Cancel deletion"
             onClick={() => setConfirmDeleteId(null)}
           >No</button>
         </div>
       ) : (
         <div className="lib-actions" onClick={e => e.stopPropagation()}>
-          <button title="Rename" onClick={e => startRename(s, e)}>✎</button>
-          <button title="Duplicate" onClick={() => onDuplicate(s.id)}>⧉</button>
+          <button title="Rename" aria-label={`Rename ${s.title}`} onClick={e => startRename(s, e)}>✎</button>
+          <button title="Duplicate" aria-label={`Duplicate ${s.title}`} onClick={() => onDuplicate(s.id)}>⧉</button>
           {hasFolders && (
-            <button title="Move to folder" onClick={() => setMovingScriptId(s.id)}>⤐</button>
+            <button title="Move to folder" aria-label={`Move ${s.title} to folder`} onClick={() => setMovingScriptId(s.id)}>⤐</button>
           )}
-          <button title="Delete" onClick={() => setConfirmDeleteId(s.id)}>✕</button>
+          <button title="Delete" aria-label={`Delete ${s.title}`} onClick={() => setConfirmDeleteId(s.id)}>✕</button>
         </div>
       )}
     </li>
@@ -247,6 +252,7 @@ export const ScriptLibrary = memo(function ScriptLibrary({
             autoFocus
             type="text"
             className="lib-folder-input"
+            aria-label="New folder name"
             placeholder="Folder name…"
             value={newFolderName}
             onChange={e => setNewFolderName(e.target.value)}
@@ -255,9 +261,10 @@ export const ScriptLibrary = memo(function ScriptLibrary({
               if (e.key === 'Escape') { setCreatingFolder(false); setNewFolderName('') }
             }}
           />
-          <button className="lib-confirm-yes" onClick={handleCreateFolder}>Create</button>
+          <button className="lib-confirm-yes" aria-label="Create folder" onClick={handleCreateFolder}>Create</button>
           <button
             className="lib-confirm-no"
+            aria-label="Cancel creating folder"
             onClick={() => { setCreatingFolder(false); setNewFolderName('') }}
           >✕</button>
         </div>
@@ -267,6 +274,7 @@ export const ScriptLibrary = memo(function ScriptLibrary({
       <div className="lib-search-wrap">
         <input
           type="search"
+          aria-label={searchContent ? 'Search script content' : 'Search script titles'}
           placeholder={searchContent ? 'Search in content…' : 'Search by title…'}
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
@@ -276,6 +284,7 @@ export const ScriptLibrary = memo(function ScriptLibrary({
           className={`lib-content-toggle${searchContent ? ' active' : ''}`}
           onClick={() => setSearchContent(v => !v)}
           title={searchContent ? 'Title search only' : 'Also search inside content'}
+          aria-label={searchContent ? 'Search title only' : 'Also search inside content'}
         >✦</button>
       </div>
 
@@ -284,6 +293,7 @@ export const ScriptLibrary = memo(function ScriptLibrary({
         <div className="lib-filters">
           <select
             className="lib-filter-select"
+            aria-label="Filter scripts by date"
             value={dateFilter}
             onChange={e => setDateFilter(e.target.value as 'all' | '7d' | '30d')}
           >
@@ -307,6 +317,7 @@ export const ScriptLibrary = memo(function ScriptLibrary({
                     <input
                       autoFocus
                       className="lib-folder-rename"
+                      aria-label="Rename folder name"
                       value={editingFolderName}
                       onChange={e => setEditingFolderName(e.target.value)}
                       onBlur={commitFolderRename}
@@ -333,10 +344,12 @@ export const ScriptLibrary = memo(function ScriptLibrary({
                     <div className="lib-folder-confirm" onClick={e => e.stopPropagation()}>
                       <button
                         className="lib-confirm-yes"
+                        aria-label={`Confirm deletion of folder ${f.name}`}
                         onClick={() => { onDeleteFolder(f.id); setConfirmDeleteFolderId(null) }}
                       >Del</button>
                       <button
                         className="lib-confirm-no"
+                        aria-label="Cancel folder deletion"
                         onClick={() => setConfirmDeleteFolderId(null)}
                       >✕</button>
                     </div>
@@ -344,10 +357,12 @@ export const ScriptLibrary = memo(function ScriptLibrary({
                     <div className="lib-folder-actions" onClick={e => e.stopPropagation()}>
                       <button
                         title="Rename folder"
+                        aria-label={`Rename folder ${f.name}`}
                         onClick={() => { setEditingFolderId(f.id); setEditingFolderName(f.name) }}
                       >✎</button>
                       <button
                         title="Delete folder — scripts become uncategorized"
+                        aria-label={`Delete folder ${f.name}`}
                         onClick={() => setConfirmDeleteFolderId(f.id)}
                       >✕</button>
                     </div>
