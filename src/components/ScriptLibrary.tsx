@@ -196,8 +196,10 @@ export const ScriptLibrary = memo(function ScriptLibrary({
             ))}
           </select>
           <button
+            type="button"
             className="lib-move-cancel"
             onClick={() => setMovingScriptId(null)}
+            aria-label="Cancel move"
           >✕</button>
         </div>
       ) : confirmDeleteId === s.id ? (
@@ -214,12 +216,12 @@ export const ScriptLibrary = memo(function ScriptLibrary({
         </div>
       ) : (
         <div className="lib-actions" onClick={e => e.stopPropagation()}>
-          <button title="Rename" onClick={e => startRename(s, e)}>✎</button>
-          <button title="Duplicate" onClick={() => onDuplicate(s.id)}>⧉</button>
+          <button type="button" title="Rename" aria-label={`Rename ${s.title}`} onClick={e => startRename(s, e)}>✎</button>
+          <button type="button" title="Duplicate" aria-label={`Duplicate ${s.title}`} onClick={() => onDuplicate(s.id)}>⧉</button>
           {hasFolders && (
-            <button title="Move to folder" onClick={() => setMovingScriptId(s.id)}>⤐</button>
+            <button type="button" title="Move to folder" aria-label={`Move ${s.title} to folder`} onClick={() => setMovingScriptId(s.id)}>⤐</button>
           )}
-          <button title="Delete" onClick={() => setConfirmDeleteId(s.id)}>✕</button>
+          <button type="button" title="Delete" aria-label={`Delete ${s.title}`} onClick={() => setConfirmDeleteId(s.id)}>✕</button>
         </div>
       )}
     </li>
@@ -257,8 +259,10 @@ export const ScriptLibrary = memo(function ScriptLibrary({
           />
           <button className="lib-confirm-yes" onClick={handleCreateFolder}>Create</button>
           <button
+            type="button"
             className="lib-confirm-no"
             onClick={() => { setCreatingFolder(false); setNewFolderName('') }}
+            aria-label="Cancel folder creation"
           >✕</button>
         </div>
       )}
@@ -273,9 +277,11 @@ export const ScriptLibrary = memo(function ScriptLibrary({
           className="lib-search"
         />
         <button
+          type="button"
           className={`lib-content-toggle${searchContent ? ' active' : ''}`}
           onClick={() => setSearchContent(v => !v)}
           title={searchContent ? 'Title search only' : 'Also search inside content'}
+          aria-label={searchContent ? 'Title search only' : 'Also search inside content'}
         >✦</button>
       </div>
 
@@ -343,11 +349,15 @@ export const ScriptLibrary = memo(function ScriptLibrary({
                   ) : (
                     <div className="lib-folder-actions" onClick={e => e.stopPropagation()}>
                       <button
+                        type="button"
                         title="Rename folder"
+                        aria-label={`Rename folder ${f.name}`}
                         onClick={() => { setEditingFolderId(f.id); setEditingFolderName(f.name) }}
                       >✎</button>
                       <button
+                        type="button"
                         title="Delete folder — scripts become uncategorized"
+                        aria-label={`Delete folder ${f.name}`}
                         onClick={() => setConfirmDeleteFolderId(f.id)}
                       >✕</button>
                     </div>

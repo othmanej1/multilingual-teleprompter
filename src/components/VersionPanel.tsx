@@ -99,7 +99,13 @@ export const VersionPanel = memo(function VersionPanel({
                 <button className="vp-btn-restore" onClick={() => setConfirmRestoreId(v.id)} title="Restore this version">
                   ↺ Restore
                 </button>
-                <button className="vp-btn-delete" onClick={() => setConfirmDeleteId(v.id)} title="Delete version">
+                <button
+                  type="button"
+                  className="vp-btn-delete"
+                  onClick={() => setConfirmDeleteId(v.id)}
+                  title="Delete version"
+                  aria-label={`Delete version from ${fmtTs(v.savedAt)}`}
+                >
                   ✕
                 </button>
               </div>
