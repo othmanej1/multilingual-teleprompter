@@ -148,15 +148,19 @@ export const PlaylistPanel = memo(function PlaylistPanel({
                 <div className="ppl-item-actions" onClick={e => e.stopPropagation()}>
                   {isActive ? (
                     <button
+                      type="button"
                       className="ppl-btn ppl-btn-stop"
                       onClick={onDeactivate}
                       title="Deactivate playlist"
+                      aria-label="Deactivate playlist"
                     >■</button>
                   ) : (
                     <button
+                      type="button"
                       className="ppl-btn ppl-btn-play"
                       onClick={() => { setExpandedId(pl.id); onActivate(pl.id) }}
                       title="Activate playlist for sequential playback"
+                      aria-label="Activate playlist"
                       disabled={pl.scriptIds.length === 0}
                     >▶</button>
                   )}
@@ -164,19 +168,24 @@ export const PlaylistPanel = memo(function PlaylistPanel({
                   {confirmDeleteId === pl.id ? (
                     <>
                       <button
+                        type="button"
                         className="ppl-btn ppl-confirm-yes"
                         onClick={() => { onDelete(pl.id); setConfirmDeleteId(null) }}
                       >Del</button>
                       <button
+                        type="button"
                         className="ppl-btn ppl-confirm-no"
                         onClick={() => setConfirmDeleteId(null)}
+                        aria-label="Cancel playlist deletion"
                       >✕</button>
                     </>
                   ) : (
                     <button
+                      type="button"
                       className="ppl-btn ppl-btn-del"
                       onClick={() => setConfirmDeleteId(pl.id)}
                       title="Delete playlist"
+                      aria-label={`Delete playlist ${pl.name}`}
                     >✕</button>
                   )}
                 </div>
@@ -206,21 +215,27 @@ export const PlaylistPanel = memo(function PlaylistPanel({
                             </span>
                             <div className="ppl-script-btns">
                               <button
+                                type="button"
                                 className="ppl-sbtn"
                                 disabled={idx === 0}
                                 onClick={() => onMoveScript(pl.id, idx, idx - 1)}
                                 title="Move up"
+                                aria-label="Move script up"
                               >↑</button>
                               <button
+                                type="button"
                                 className="ppl-sbtn"
                                 disabled={idx === pl.scriptIds.length - 1}
                                 onClick={() => onMoveScript(pl.id, idx, idx + 1)}
                                 title="Move down"
+                                aria-label="Move script down"
                               >↓</button>
                               <button
+                                type="button"
                                 className="ppl-sbtn ppl-sbtn-del"
                                 onClick={() => onRemoveScript(pl.id, sid)}
                                 title="Remove from playlist"
+                                aria-label="Remove script from playlist"
                               >✕</button>
                             </div>
                           </li>
