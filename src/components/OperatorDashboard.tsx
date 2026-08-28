@@ -92,17 +92,18 @@ export const OperatorDashboard = memo(function OperatorDashboard({
 
       {/* Transport controls */}
       <div className="op-transport">
-        <button className="op-jump" onClick={() => onJump(-10)} title="Back 10s">«10</button>
-        <button className="op-jump" onClick={() => onJump(-5)} title="Back 5s">«5</button>
+        <button className="op-jump" onClick={() => onJump(-10)} title="Back 10s" aria-label="Rewind 10 seconds">«10</button>
+        <button className="op-jump" onClick={() => onJump(-5)} title="Back 5s" aria-label="Rewind 5 seconds">«5</button>
         <button
           className={`op-play${isPlaying ? ' playing' : ''}`}
           onClick={onPlayPause}
           title={isPlaying ? 'Pause' : 'Play'}
+          aria-label={isPlaying ? 'Pause' : 'Play'}
         >
           {isPlaying ? '⏸' : '▶'}
         </button>
-        <button className="op-jump" onClick={() => onJump(5)} title="Forward 5s">5»</button>
-        <button className="op-jump" onClick={() => onJump(10)} title="Forward 10s">10»</button>
+        <button className="op-jump" onClick={() => onJump(5)} title="Forward 5s" aria-label="Forward 5 seconds">5»</button>
+        <button className="op-jump" onClick={() => onJump(10)} title="Forward 10s" aria-label="Forward 10 seconds">10»</button>
       </div>
 
       {/* Cue navigation — only shown when script contains [CUE] markers */}
