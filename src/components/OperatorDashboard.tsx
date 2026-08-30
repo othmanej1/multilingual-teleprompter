@@ -92,17 +92,18 @@ export const OperatorDashboard = memo(function OperatorDashboard({
 
       {/* Transport controls */}
       <div className="op-transport">
-        <button className="op-jump" onClick={() => onJump(-10)} title="Back 10s">«10</button>
-        <button className="op-jump" onClick={() => onJump(-5)} title="Back 5s">«5</button>
+        <button className="op-jump" onClick={() => onJump(-10)} title="Back 10s" aria-label="Back 10 seconds">«10</button>
+        <button className="op-jump" onClick={() => onJump(-5)} title="Back 5s" aria-label="Back 5 seconds">«5</button>
         <button
           className={`op-play${isPlaying ? ' playing' : ''}`}
           onClick={onPlayPause}
           title={isPlaying ? 'Pause' : 'Play'}
+          aria-label={isPlaying ? 'Pause' : 'Play'}
         >
           {isPlaying ? '⏸' : '▶'}
         </button>
-        <button className="op-jump" onClick={() => onJump(5)} title="Forward 5s">5»</button>
-        <button className="op-jump" onClick={() => onJump(10)} title="Forward 10s">10»</button>
+        <button className="op-jump" onClick={() => onJump(5)} title="Forward 5s" aria-label="Forward 5 seconds">5»</button>
+        <button className="op-jump" onClick={() => onJump(10)} title="Forward 10s" aria-label="Forward 10 seconds">10»</button>
       </div>
 
       {/* Cue navigation — only shown when script contains [CUE] markers */}
@@ -110,8 +111,8 @@ export const OperatorDashboard = memo(function OperatorDashboard({
         <div className="op-cue-row">
           <span className="op-cue-label">Cues · {cueCount}</span>
           <div className="op-cue-btns">
-            <button className="op-jump" onClick={() => onJumpToCue('prev')} title="Previous cue  [">◀ Prev</button>
-            <button className="op-jump" onClick={() => onJumpToCue('next')} title="Next cue  ]">Next ▶</button>
+            <button className="op-jump" onClick={() => onJumpToCue('prev')} title="Previous cue  [" aria-label="Previous cue">◀ Prev</button>
+            <button className="op-jump" onClick={() => onJumpToCue('next')} title="Next cue  ]" aria-label="Next cue">Next ▶</button>
           </div>
         </div>
       )}
