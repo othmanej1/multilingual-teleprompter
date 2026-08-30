@@ -214,12 +214,12 @@ export const ScriptLibrary = memo(function ScriptLibrary({
         </div>
       ) : (
         <div className="lib-actions" onClick={e => e.stopPropagation()}>
-          <button title="Rename" onClick={e => startRename(s, e)}>✎</button>
-          <button title="Duplicate" onClick={() => onDuplicate(s.id)}>⧉</button>
+          <button title="Rename" aria-label={`Rename script ${s.title}`} onClick={e => startRename(s, e)}>✎</button>
+          <button title="Duplicate" aria-label={`Duplicate script ${s.title}`} onClick={() => onDuplicate(s.id)}>⧉</button>
           {hasFolders && (
-            <button title="Move to folder" onClick={() => setMovingScriptId(s.id)}>⤐</button>
+            <button title="Move to folder" aria-label={`Move script ${s.title} to folder`} onClick={() => setMovingScriptId(s.id)}>⤐</button>
           )}
-          <button title="Delete" onClick={() => setConfirmDeleteId(s.id)}>✕</button>
+          <button title="Delete" aria-label={`Delete script ${s.title}`} onClick={() => setConfirmDeleteId(s.id)}>✕</button>
         </div>
       )}
     </li>
@@ -276,6 +276,7 @@ export const ScriptLibrary = memo(function ScriptLibrary({
           className={`lib-content-toggle${searchContent ? ' active' : ''}`}
           onClick={() => setSearchContent(v => !v)}
           title={searchContent ? 'Title search only' : 'Also search inside content'}
+          aria-label={searchContent ? 'Title search only' : 'Also search inside content'}
         >✦</button>
       </div>
 
@@ -344,10 +345,12 @@ export const ScriptLibrary = memo(function ScriptLibrary({
                     <div className="lib-folder-actions" onClick={e => e.stopPropagation()}>
                       <button
                         title="Rename folder"
+                        aria-label={`Rename folder ${f.name}`}
                         onClick={() => { setEditingFolderId(f.id); setEditingFolderName(f.name) }}
                       >✎</button>
                       <button
                         title="Delete folder — scripts become uncategorized"
+                        aria-label={`Delete folder ${f.name}`}
                         onClick={() => setConfirmDeleteFolderId(f.id)}
                       >✕</button>
                     </div>
