@@ -49,6 +49,7 @@ export const OperatorDashboard = memo(function OperatorDashboard({
           className={`op-output-btn${outputConnected ? ' connected' : ''}`}
           onClick={onOpenOutput}
           title={outputConnected ? 'Output window connected' : 'Open output window'}
+          aria-label={outputConnected ? 'Output window connected' : 'Open output window'}
         >
           <span className="op-output-dot" />
           {outputConnected ? 'Output: Live' : 'Open Output'}
@@ -69,7 +70,15 @@ export const OperatorDashboard = memo(function OperatorDashboard({
       )}
 
       {/* Progress bar */}
-      <div className="op-progress-wrap" title={`${pct}% complete`}>
+      <div
+        className="op-progress-wrap"
+        title={`${pct}% complete`}
+        role="progressbar"
+        aria-label="Teleprompter scroll progress"
+        aria-valuenow={pct}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
         <div className="op-progress-bar" style={{ width: `${pct}%` }} />
         <span className="op-progress-label">{pct}%</span>
       </div>
@@ -92,17 +101,18 @@ export const OperatorDashboard = memo(function OperatorDashboard({
 
       {/* Transport controls */}
       <div className="op-transport">
-        <button className="op-jump" onClick={() => onJump(-10)} title="Back 10s">«10</button>
-        <button className="op-jump" onClick={() => onJump(-5)} title="Back 5s">«5</button>
+        <button className="op-jump" onClick={() => onJump(-10)} title="Back 10s" aria-label="Seek back 10 seconds">«10</button>
+        <button className="op-jump" onClick={() => onJump(-5)} title="Back 5s" aria-label="Seek back 5 seconds">«5</button>
         <button
           className={`op-play${isPlaying ? ' playing' : ''}`}
           onClick={onPlayPause}
           title={isPlaying ? 'Pause' : 'Play'}
+          aria-label={isPlaying ? 'Pause teleprompter' : 'Play teleprompter'}
         >
           {isPlaying ? '⏸' : '▶'}
         </button>
-        <button className="op-jump" onClick={() => onJump(5)} title="Forward 5s">5»</button>
-        <button className="op-jump" onClick={() => onJump(10)} title="Forward 10s">10»</button>
+        <button className="op-jump" onClick={() => onJump(5)} title="Forward 5s" aria-label="Seek forward 5 seconds">5»</button>
+        <button className="op-jump" onClick={() => onJump(10)} title="Forward 10s" aria-label="Seek forward 10 seconds">10»</button>
       </div>
 
       {/* Cue navigation — only shown when script contains [CUE] markers */}
@@ -110,19 +120,21 @@ export const OperatorDashboard = memo(function OperatorDashboard({
         <div className="op-cue-row">
           <span className="op-cue-label">Cues · {cueCount}</span>
           <div className="op-cue-btns">
-            <button className="op-jump" onClick={() => onJumpToCue('prev')} title="Previous cue  [">◀ Prev</button>
-            <button className="op-jump" onClick={() => onJumpToCue('next')} title="Next cue  ]">Next ▶</button>
+            <button className="op-jump" onClick={() => onJumpToCue('prev')} title="Previous cue  [" aria-label="Jump to previous cue">◀ Prev</button>
+            <button className="op-jump" onClick={() => onJumpToCue('next')} title="Next cue  ]" aria-label="Jump to next cue">Next ▶</button>
           </div>
         </div>
       )}
 
       {/* Speed slider */}
       <div className="op-speed-row">
-        <span className="op-speed-label">Speed</span>
+        <label htmlFor="op-speed-slider-input" className="op-speed-label">Speed</label>
         <input
+          id="op-speed-slider-input"
           type="range" min={10} max={300} value={speed}
           onChange={e => onSpeedChange(+e.target.value)}
           className="op-speed-slider"
+          aria-label="Scroll speed in pixels per second"
         />
         <span className="op-speed-val">{speed}</span>
       </div>
