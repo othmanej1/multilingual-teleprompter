@@ -86,20 +86,20 @@ export const VersionPanel = memo(function VersionPanel({
               <div className="vp-confirm-row">
                 <span className="vp-confirm-msg">Restore this version?</span>
                 <button className="vp-confirm-yes" onClick={() => { onRestore(v); setConfirmRestoreId(null) }}>Yes</button>
-                <button className="vp-confirm-no" onClick={() => setConfirmRestoreId(null)}>No</button>
+                <button className="vp-confirm-no" aria-label="Cancel restore" onClick={() => setConfirmRestoreId(null)}>No</button>
               </div>
             ) : confirmDeleteId === v.id ? (
               <div className="vp-confirm-row">
                 <span className="vp-confirm-msg">Delete version?</span>
                 <button className="vp-confirm-yes" onClick={() => { onDelete(v.id); setConfirmDeleteId(null) }}>Yes</button>
-                <button className="vp-confirm-no" onClick={() => setConfirmDeleteId(null)}>No</button>
+                <button className="vp-confirm-no" aria-label="Cancel deletion" onClick={() => setConfirmDeleteId(null)}>No</button>
               </div>
             ) : (
               <div className="vp-item-actions">
                 <button className="vp-btn-restore" onClick={() => setConfirmRestoreId(v.id)} title="Restore this version">
                   ↺ Restore
                 </button>
-                <button className="vp-btn-delete" onClick={() => setConfirmDeleteId(v.id)} title="Delete version">
+                <button className="vp-btn-delete" onClick={() => setConfirmDeleteId(v.id)} title="Delete version" aria-label="Delete version">
                   ✕
                 </button>
               </div>
